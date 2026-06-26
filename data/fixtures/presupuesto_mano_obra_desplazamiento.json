@@ -1,0 +1,64 @@
+{
+  "header": {
+    "schema_version": 1,
+    "quote_number": "2024-MOD-007",
+    "client_name": "Talleres Roca S.L.",
+    "client_tax_id": "B35456789",
+    "client_address": "Polígono Industrial La Minilla, nave 14, Las Palmas",
+    "date": "2024-03-05",
+    "title": "Mantenimiento preventivo anual + reparación avería",
+    "validity": "15 días",
+    "payment": "Al finalizar",
+    "global_margin": 0,
+    "tax": 7,
+    "include_tax": false,
+    "internal_notes": "Solo mano de obra y desplazamiento. Sin materiales de proveedor."
+  },
+  "lines": [
+    {
+      "id": "lab-001",
+      "type": "labor",
+      "description": "Revisión y mantenimiento preventivo split 6 equipos",
+      "quantity": 8,
+      "unit": "h",
+      "sale_mode": "fixed_unit",
+      "sale_value": 45.00
+    },
+    {
+      "id": "lab-002",
+      "type": "labor",
+      "description": "Diagnóstico y reparación avería unidad exterior",
+      "quantity": 4,
+      "unit": "h",
+      "sale_mode": "fixed_unit",
+      "sale_value": 55.00
+    },
+    {
+      "id": "lab-003",
+      "type": "labor",
+      "description": "Limpieza filtros y serpentines (6 equipos)",
+      "quantity": 3,
+      "unit": "h",
+      "sale_mode": "fixed_unit",
+      "sale_value": 40.00
+    },
+    {
+      "id": "trav-001",
+      "type": "travel",
+      "description": "Desplazamiento (2 técnicos, ida y vuelta)",
+      "quantity": 1,
+      "unit": "partida",
+      "sale_mode": "fixed_total",
+      "sale_value": 80.00
+    },
+    {
+      "id": "mat-001",
+      "type": "material",
+      "description": "Consumibles: bridas, cinta americana, filtro HEPA",
+      "quantity": 1,
+      "unit": "partida",
+      "sale_mode": "fixed_total",
+      "sale_value": 35.00
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "header": {
+    "schema_version": 1,
+    "quote_number": "2024-VAR-003",
+    "client_name": "Hotel Las Dunas",
+    "client_tax_id": "B38987654",
+    "client_address": "Avda. Marítima 45, Maspalomas",
+    "date": "2024-02-10",
+    "title": "Renovación climatización planta 2",
+    "validity": "30 días",
+    "payment": "50% a la firma y 50% al finalizar",
+    "global_margin": 33,
+    "tax": 7,
+    "include_tax": false,
+    "conditions": "Trabajo a realizar fuera del horario de ocupación hotelera.",
+    "internal_notes": "3 proveedores: Frigicoll 40+5, Carrier 35%, MEG 20%."
+  },
+  "lines": [
+    {
+      "id": "fri-101",
+      "type": "material",
+      "code": "FTXS50G",
+      "description": "Split Daikin 1x1 5kW Sky Air",
+      "quantity": 4,
+      "unit": "ud",
+      "supplier": "Frigicoll",
+      "supplier_gross_unit_price": 680.00,
+      "supplier_discounts": [40, 5],
+      "sale_mode": "margin",
+      "margin": 35,
+      "pass_supplier_discount_to_client": false
+    },
+    {
+      "id": "fri-102",
+      "type": "material",
+      "code": "TUBO-CU-38",
+      "description": "Tubería cobre aislada 3/8-5/8 (ml)",
+      "quantity": 40,
+      "unit": "ml",
+      "supplier": "Frigicoll",
+      "supplier_gross_unit_price": 12.00,
+      "supplier_discounts": [30],
+      "sale_mode": "margin",
+      "margin": 35,
+      "pass_supplier_discount_to_client": false
+    },
+    {
+      "id": "carr-101",
+      "type": "material",
+      "code": "38GXC018",
+      "description": "Condensadora Carrier 5.5kW trifásica",
+      "quantity": 2,
+      "unit": "ud",
+      "supplier": "Carrier",
+      "supplier_gross_unit_price": 1250.00,
+      "supplier_discounts": [35],
+      "sale_mode": "margin",
+      "margin": 30,
+      "pass_supplier_discount_to_client": false
+    },
+    {
+      "id": "carr-102",
+      "type": "material",
+      "code": "40GXC018",
+      "description": "Unidad interior conductos Carrier 5.5kW",
+      "quantity": 2,
+      "unit": "ud",
+      "supplier": "Carrier",
+      "supplier_gross_unit_price": 820.00,
+      "supplier_discounts": [35],
+      "sale_mode": "margin",
+      "margin": 30,
+      "pass_supplier_discount_to_client": false
+    },
+    {
+      "id": "meg-101",
+      "type": "material",
+      "code": "CAB-3x2.5",
+      "description": "Cable manguera 3x2.5mm² (ml)",
+      "quantity": 60,
+      "unit": "ml",
+      "supplier": "MEG",
+      "supplier_gross_unit_price": 2.80,
+      "supplier_discounts": [20],
+      "sale_mode": "margin",
+      "pass_supplier_discount_to_client": false
+    },
+    {
+      "id": "meg-102",
+      "type": "material",
+      "code": "IGA-32A",
+      "description": "Interruptor automático 32A bipolar",
+      "quantity": 6,
+      "unit": "ud",
+      "supplier": "MEG",
+      "supplier_gross_unit_price": 18.50,
+      "supplier_discounts": [20],
+      "sale_mode": "margin",
+      "pass_supplier_discount_to_client": false
+    },
+    {
+      "id": "labor-101",
+      "type": "labor",
+      "description": "Montaje, instalación eléctrica y puesta en marcha",
+      "quantity": 32,
+      "unit": "h",
+      "sale_mode": "fixed_unit",
+      "sale_value": 45.00
+    },
+    {
+      "id": "travel-101",
+      "type": "travel",
+      "description": "Desplazamientos a obra (sur)",
+      "quantity": 1,
+      "unit": "partida",
+      "sale_mode": "fixed_total",
+      "sale_value": 120.00
+    }
+  ]
+}

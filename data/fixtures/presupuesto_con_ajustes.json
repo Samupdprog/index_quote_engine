@@ -1,0 +1,99 @@
+{
+  "header": {
+    "schema_version": 1,
+    "quote_number": "2024-ADJ-012",
+    "client_name": "Residencial Atlántico",
+    "client_tax_id": "H35112233",
+    "client_address": "Calle Primavera 3, Telde",
+    "date": "2024-04-20",
+    "title": "Instalación VRF + ajustes comerciales",
+    "validity": "30 días",
+    "payment": "50% a la firma y 50% al finalizar",
+    "global_margin": 32,
+    "tax": 7,
+    "include_tax": false,
+    "internal_notes": "Incluye ajuste positivo por ITE y descuento comercial acordado con dirección."
+  },
+  "lines": [
+    {
+      "id": "vrf-001",
+      "type": "material",
+      "code": "MXZ-4E83VA",
+      "description": "Unidad exterior Mitsubishi VRF 4x1 8.3kW",
+      "quantity": 1,
+      "unit": "ud",
+      "supplier": "Intesa",
+      "supplier_gross_unit_price": 1850.00,
+      "supplier_discounts": [38],
+      "sale_mode": "margin",
+      "margin": 32,
+      "pass_supplier_discount_to_client": false
+    },
+    {
+      "id": "vrf-002",
+      "type": "material",
+      "code": "MSZ-AP25VG",
+      "description": "Unidad interior pared Mitsubishi 2.5kW",
+      "quantity": 4,
+      "unit": "ud",
+      "supplier": "Intesa",
+      "supplier_gross_unit_price": 380.00,
+      "supplier_discounts": [38],
+      "sale_mode": "margin",
+      "margin": 32,
+      "pass_supplier_discount_to_client": false
+    },
+    {
+      "id": "vrf-003",
+      "type": "material",
+      "code": "TUBO-CU-14",
+      "description": "Tubería cobre aislada 1/4-1/2 (ml)",
+      "quantity": 25,
+      "unit": "ml",
+      "supplier": "Intesa",
+      "supplier_gross_unit_price": 9.00,
+      "supplier_discounts": [25],
+      "sale_mode": "margin",
+      "margin": 32,
+      "pass_supplier_discount_to_client": false
+    },
+    {
+      "id": "lab-001",
+      "type": "labor",
+      "description": "Montaje sistema VRF 4x1, instalación y puesta en marcha",
+      "quantity": 20,
+      "unit": "h",
+      "sale_mode": "fixed_unit",
+      "sale_value": 45.00
+    },
+    {
+      "id": "trav-001",
+      "type": "travel",
+      "description": "Desplazamiento a obra (Telde)",
+      "quantity": 1,
+      "unit": "partida",
+      "sale_mode": "fixed_total",
+      "sale_value": 70.00
+    },
+    {
+      "id": "adj-001",
+      "type": "adjustment",
+      "description": "Cargo tramitación ITE (Inspección Técnica de Equipos)",
+      "quantity": 1,
+      "unit": "partida",
+      "sale_mode": "fixed_total",
+      "sale_value": 150.00,
+      "notes": "Gestión administrativa obligatoria para equipos >12kW"
+    },
+    {
+      "id": "adj-002",
+      "type": "adjustment",
+      "description": "Descuento comercial cliente (acuerdo dirección)",
+      "quantity": 1,
+      "unit": "partida",
+      "sale_mode": "fixed_total",
+      "sale_value": -250.00,
+      "notes": "Descuento negativo por volumen de obra"
+    }
+  ]
+}

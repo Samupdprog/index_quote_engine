@@ -19,6 +19,7 @@ ALL_FIXTURES = [
     "factura_varios_materiales.json",
     "presupuesto_mano_obra_desplazamiento.json",
     "presupuesto_con_ajustes.json",
+    "presupuesto_completo_mixto.json",
 ]
 
 
@@ -285,3 +286,119 @@ class TestPresupuestoConAjustesFixture:
         assert len(payload["items"]) == len(snap.lines)
         # El total del payload coincide con el calculado
         assert payload["totals"]["total"] == pytest.approx(calc.totals.final_total, abs=0.02)
+
+
+# ---------------------------------------------------------------------------
+# Fixture: presupuesto_completo_mixto.json
+# ---------------------------------------------------------------------------
+
+class TestPresupuestoCompletoMixtoFixture:
+    def test_loads(self):
+        snap = _load("presupuesto_completo_mixto.json")
+        assert snap is not None
+        assert len(snap.lines) == 10
+
+    def test_calculates(self):
+        snap = _load("presupuesto_completo_mixto.json")
+        calc = calculate_quote(snap)
+        assert len(calc.lines) == len(snap.lines)
+
+    def test_totals_positive(self):
+        snap = _load("presupuesto_completo_mixto.json")
+        calc = calculate_quote(snap)
+        assert calc.totals.final_total > 0
+        assert calc.totals.sale_subtotal > 0
+
+    def test_gross_profit_positive(self):
+        snap = _load("presupuesto_completo_mixto.json")
+        calc = calculate_quote(snap)
+        assert calc.totals.gross_profit > 0
+
+    def test_three_suppliers(self):
+        snap = _load("presupuesto_completo_mixto.json")
+        suppliers = {l.supplier for l in snap.lines if l.supplier}
+        assert suppliers == {"Frigicoll", "Carrier", "MEG"}
+
+    def test_frigicoll_chained_discount_40_5(self):
+        snap = _load("presupuesto_completo_mixto.json")
+        calc = calculate_quote(snap)
+        # fri-001: PVP=520, desc=40+5 → coste=520×0.60×0.95=296.40
+        line = next(l_c for l_s, l_c in zip(snap.lines, calc.lines) if l_s.id == "fri-001")
+        assert line.cost_unit == pytest.approx(296.40, abs=0.01)
+        assert line.effective_supplier_discount == pytest.approx(43.0, abs=0.1)
+
+    def test_meg_net_cost_no_pvp(self):
+        snap = _load("presupuesto_completo_mixto.json")
+        calc = calculate_quote(snap)
+        # meg-001: coste neto directo 186€, sin PVP ni descuentos
+        line = next(l_c for l_s, l_c in zip(snap.lines, calc.lines) if l_s.id == "meg-001")
+        assert line.cost_unit == pytest.approx(186.0, abs=0.01)
+        assert line.effective_supplier_discount is None
+
+    def test_specific_igic_line(self):
+        snap = _load("presupuesto_completo_mixto.json")
+        calc = calculate_quote(snap)
+        # meg-002: IGIC=3% específico (no el 7% del header)
+        line = next(l_c for l_s, l_c in zip(snap.lines, calc.lines) if l_s.id == "meg-002")
+        assert line.tax_rate == pytest.approx(3.0, abs=0.01)
+
+    def test_carrier_own_margin(self):
+        snap = _load("presupuesto_completo_mixto.json")
+        carr = next(l for l in snap.lines if l.id == "carr-001")
+        assert carr.margin == 30  # margen propio, no el global 35
+
+    def test_negative_adjustment_reduces_sale(self):
+        snap = _load("presupuesto_completo_mixto.json")
+        calc = calculate_quote(snap)
+        adj = next(l_c for l_s, l_c in zip(snap.lines, calc.lines) if l_s.id == "adj-001")
+        assert adj.sale_total_without_tax == pytest.approx(-400.0, abs=0.01)
+        # El subtotal sin ajuste es mayor que el subtotal con ajuste
+        subtotal_sin_adj = sum(
+            l_c.sale_total_without_tax
+            for l_s, l_c in zip(snap.lines, calc.lines)
+            if l_s.type != "adjustment"
+        )
+        assert calc.totals.sale_subtotal == pytest.approx(subtotal_sin_adj - 400.0, abs=0.02)
+
+    def test_apply_margin_to_frigicoll(self):
+        snap = _load("presupuesto_completo_mixto.json")
+        snap2 = apply_command(snap, {
+            "type": "apply_margin_to_supplier",
+            "supplier": "Frigicoll",
+            "margin": 40,
+        })
+        calc_orig = calculate_quote(snap)
+        calc_new = calculate_quote(snap2)
+        # Venta de líneas Frigicoll sube con margen mayor
+        for l_s, l_orig, l_new in zip(snap2.lines, calc_orig.lines, calc_new.lines):
+            if l_s.supplier == "Frigicoll":
+                assert l_new.sale_total_without_tax > l_orig.sale_total_without_tax
+        # Carrier y MEG no se tocan
+        for line in snap2.lines:
+            if line.supplier in ("Carrier", "MEG"):
+                orig = next(l for l in snap.lines if l.id == line.id)
+                assert line.margin == orig.margin
+
+    def test_apply_pass_discount_frigicoll_increases_sale_and_profit(self):
+        snap = _load("presupuesto_completo_mixto.json")
+        snap2 = apply_command(snap, {
+            "type": "apply_pass_supplier_discount_to_supplier",
+            "supplier": "Frigicoll",
+            "enabled": True,
+        })
+        calc_orig = calculate_quote(snap)
+        calc_new = calculate_quote(snap2)
+        # Líneas Frigicoll con PVP: base de venta pasa de coste neto a PVP bruto → sube
+        for l_s, l_orig, l_new in zip(snap2.lines, calc_orig.lines, calc_new.lines):
+            if l_s.supplier == "Frigicoll" and l_s.supplier_gross_unit_price is not None:
+                assert l_new.sale_total_without_tax > l_orig.sale_total_without_tax
+                assert l_new.gross_profit > l_orig.gross_profit
+
+    def test_holded_export_valid(self):
+        snap = _load("presupuesto_completo_mixto.json")
+        calc = calculate_quote(snap)
+        payload = export_holded_payload(snap, calc)
+        assert payload["contactName"] == "Comunidad de Propietarios Los Almendros"
+        assert len(payload["items"]) == len(snap.lines)
+        assert payload["totals"]["total"] == pytest.approx(calc.totals.final_total, abs=0.02)
+        assert payload["totals"]["total"] > 0

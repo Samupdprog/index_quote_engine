@@ -1,0 +1,136 @@
+{
+  "header": {
+    "schema_version": 1,
+    "quote_number": "2024-MIX-015",
+    "client_name": "Comunidad de Propietarios Los Almendros",
+    "client_tax_id": "H35778899",
+    "client_address": "Calle Las Mimosas 7, Santa Brígida, Las Palmas",
+    "date": "2024-05-14",
+    "title": "Renovación completa climatización bloque A (8 viviendas)",
+    "validity": "30 días",
+    "payment": "40% a la firma, 40% a mitad de obra, 20% al finalizar",
+    "global_margin": 35,
+    "tax": 7,
+    "include_tax": false,
+    "conditions": "Garantía de instalación 2 años. Equipos con garantía de fabricante. Trabajo en horario acordado con la comunidad.",
+    "internal_notes": "Cliente nuevo captado por referido. 3 proveedores. Frigicoll 40+5, Carrier 32%, MEG coste directo. IGIC reducido 3% en cableado estructural."
+  },
+  "lines": [
+    {
+      "id": "fri-001",
+      "type": "material",
+      "code": "FTXC35D",
+      "description": "Split Daikin 1x1 3.5kW Inverter (u.interior + u.exterior)",
+      "quantity": 6,
+      "unit": "ud",
+      "supplier": "Frigicoll",
+      "supplier_gross_unit_price": 520.00,
+      "supplier_discounts": [40, 5],
+      "sale_mode": "margin",
+      "pass_supplier_discount_to_client": false
+    },
+    {
+      "id": "fri-002",
+      "type": "material",
+      "code": "FTXC50D",
+      "description": "Split Daikin 1x1 5kW Inverter (u.interior + u.exterior)",
+      "quantity": 2,
+      "unit": "ud",
+      "supplier": "Frigicoll",
+      "supplier_gross_unit_price": 780.00,
+      "supplier_discounts": [40, 5],
+      "sale_mode": "margin",
+      "pass_supplier_discount_to_client": false
+    },
+    {
+      "id": "fri-003",
+      "type": "material",
+      "code": "TUBO-CU-14-12",
+      "description": "Tubería cobre aislada 1/4-1/2 (ml)",
+      "quantity": 80,
+      "unit": "ml",
+      "supplier": "Frigicoll",
+      "supplier_gross_unit_price": 8.50,
+      "supplier_discounts": [30],
+      "sale_mode": "margin",
+      "pass_supplier_discount_to_client": false
+    },
+    {
+      "id": "carr-001",
+      "type": "material",
+      "code": "38GXC024",
+      "description": "Cassette Carrier 4 vías 7kW",
+      "quantity": 1,
+      "unit": "ud",
+      "supplier": "Carrier",
+      "supplier_gross_unit_price": 1350.00,
+      "supplier_discounts": [32],
+      "sale_mode": "margin",
+      "margin": 30,
+      "pass_supplier_discount_to_client": false
+    },
+    {
+      "id": "meg-001",
+      "type": "material",
+      "code": "CAJ-DIN-P",
+      "description": "Cuadro eléctrico con protecciones (suministrado por instalador)",
+      "quantity": 1,
+      "unit": "ud",
+      "supplier": "MEG",
+      "supplier_net_unit_cost": 186.00,
+      "sale_mode": "margin",
+      "pass_supplier_discount_to_client": false
+    },
+    {
+      "id": "meg-002",
+      "type": "material",
+      "code": "CAB-3x6",
+      "description": "Cable manguera 3x6mm² para circuito principal (ml)",
+      "quantity": 45,
+      "unit": "ml",
+      "supplier": "MEG",
+      "supplier_gross_unit_price": 4.20,
+      "supplier_discounts": [20],
+      "sale_mode": "margin",
+      "tax": 3,
+      "notes": "IGIC tipo reducido 3% — cableado de infraestructura eléctrica"
+    },
+    {
+      "id": "lab-001",
+      "type": "labor",
+      "description": "Montaje, instalación eléctrica y puesta en marcha (8 equipos)",
+      "quantity": 40,
+      "unit": "h",
+      "sale_mode": "fixed_unit",
+      "sale_value": 45.00
+    },
+    {
+      "id": "trav-001",
+      "type": "travel",
+      "description": "Desplazamientos a obra (Santa Brígida, múltiples jornadas)",
+      "quantity": 1,
+      "unit": "partida",
+      "sale_mode": "fixed_total",
+      "sale_value": 180.00
+    },
+    {
+      "id": "glob-001",
+      "type": "global_work",
+      "description": "Medios auxiliares, material menor y gestión de residuos",
+      "quantity": 1,
+      "unit": "partida",
+      "sale_mode": "fixed_total",
+      "sale_value": 250.00
+    },
+    {
+      "id": "adj-001",
+      "type": "adjustment",
+      "description": "Descuento comercial — cliente referido comunidad",
+      "quantity": 1,
+      "unit": "partida",
+      "sale_mode": "fixed_total",
+      "sale_value": -400.00,
+      "notes": "Descuento acordado por captación vía referido de Comunidad El Pinar"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "_comment": "Cambia el margen de una línea concreta. Sustituye LINE_ID por el id real de la línea.",
+  "snapshot": {
+    "header": {
+      "schema_version": 1,
+      "global_margin": 35,
+      "tax": 7,
+      "include_tax": false
+    },
+    "lines": [
+      {
+        "id": "LINE_ID",
+        "type": "material",
+        "description": "Split Daikin 1x1",
+        "quantity": 2,
+        "unit": "ud",
+        "supplier": "Frigicoll",
+        "supplier_gross_unit_price": 500,
+        "supplier_discounts": [40, 5],
+        "sale_mode": "margin",
+        "margin": 35,
+        "pass_supplier_discount_to_client": false
+      }
+    ]
+  },
+  "command": {
+    "type": "set_line_margin",
+    "line_id": "LINE_ID",
+    "margin": 40
+  }
+}

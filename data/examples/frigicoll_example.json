@@ -1,0 +1,27 @@
+[
+  {
+    "descripcion": "Split Daikin 1x1 2.5kW Inverter",
+    "cantidad": 2,
+    "unidad": "ud",
+    "proveedor": "Frigicoll",
+    "codigo": "FTXC25D",
+    "pvpProveedor": 500.00,
+    "descuentosProveedor": [40, 5],
+    "margen": 35
+  },
+  {
+    "descripcion": "Mano de obra instalación",
+    "tipo": "labor",
+    "cantidad": 8,
+    "unidad": "h",
+    "sale_mode": "fixed_unit",
+    "sale_value": 45.00
+  },
+  {
+    "descripcion": "Desplazamiento",
+    "tipo": "travel",
+    "cantidad": 1,
+    "sale_mode": "fixed_total",
+    "sale_value": 50.00
+  }
+]

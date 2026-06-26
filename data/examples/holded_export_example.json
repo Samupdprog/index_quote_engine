@@ -1,0 +1,62 @@
+{
+  "_comment": "Ejemplo de payload que devuelve /quotes/export/holded. No se envía nada a Holded; solo se genera este JSON listo para enviar cuando se integre.",
+  "_endpoint": "POST /quotes/export/holded",
+  "_input": {
+    "snapshot": {
+      "header": {
+        "quote_number": "2024-001",
+        "client_name": "Comunidad El Pinar",
+        "client_tax_id": "H12345678",
+        "client_address": "Calle Mayor 1, Las Palmas",
+        "date": "2024-01-15",
+        "title": "Instalación climatización",
+        "global_margin": 35,
+        "tax": 7,
+        "include_tax": false
+      },
+      "lines": [
+        {
+          "description": "Split Daikin 1x1 2.5kW",
+          "quantity": 2,
+          "supplier": "Frigicoll",
+          "supplier_gross_unit_price": 500,
+          "supplier_discounts": [40, 5],
+          "sale_mode": "margin",
+          "margin": 35
+        }
+      ]
+    }
+  },
+  "_output_example": {
+    "contactName": "Comunidad El Pinar",
+    "contactTaxId": "H12345678",
+    "contactAddress": "Calle Mayor 1, Las Palmas",
+    "date": "2024-01-15",
+    "quoteNumber": "2024-001",
+    "title": "Instalación climatización",
+    "notes": null,
+    "currency": "EUR",
+    "items": [
+      {
+        "name": "Split Daikin 1x1 2.5kW",
+        "desc": "",
+        "units": 2.0,
+        "subtotal": 769.5,
+        "tax": 7.0,
+        "total": 823.37,
+        "_meta": {
+          "type": "material",
+          "supplier": "Frigicoll",
+          "cost_total": 570.0,
+          "gross_profit": 199.5,
+          "sale_mode": "margin"
+        }
+      }
+    ],
+    "totals": {
+      "subtotal": 769.5,
+      "tax": 53.87,
+      "total": 823.37
+    }
+  }
+}

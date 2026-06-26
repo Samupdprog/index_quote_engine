@@ -1,0 +1,42 @@
+{
+  "_comment": "Activa pass_supplier_discount_to_client para Frigicoll. La base de venta pasa a ser el PVP bruto del proveedor (500) en lugar del coste neto (285). El cliente ve el precio de tarifa oficial aunque la empresa tenga descuento.",
+  "snapshot": {
+    "header": {
+      "schema_version": 1,
+      "global_margin": 35,
+      "tax": 7,
+      "include_tax": false
+    },
+    "lines": [
+      {
+        "id": "LINE_ID",
+        "type": "material",
+        "description": "Split Daikin 1x1",
+        "quantity": 2,
+        "unit": "ud",
+        "supplier": "Frigicoll",
+        "supplier_gross_unit_price": 500,
+        "supplier_discounts": [40, 5],
+        "sale_mode": "margin",
+        "margin": 35,
+        "pass_supplier_discount_to_client": false
+      }
+    ]
+  },
+  "command": {
+    "type": "apply_pass_supplier_discount_to_supplier",
+    "supplier": "Frigicoll",
+    "enabled": true
+  },
+  "_expected_result": {
+    "cost_unit": 285,
+    "cost_total": 570,
+    "sale_base": "PVP bruto = 500 (no el neto 285)",
+    "sale_unit_without_tax": 675,
+    "sale_total_without_tax": 1350,
+    "tax_amount_7pct": 94.5,
+    "client_total": 1444.5,
+    "gross_profit": 780,
+    "gross_profit_percent": 136.84
+  }
+}

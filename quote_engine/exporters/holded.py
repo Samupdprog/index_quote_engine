@@ -5,6 +5,7 @@ No envía nada a Holded. Solo genera el dict listo para enviar.
 
 from __future__ import annotations
 
+from ..document_rules import ensure_required_document_sections
 from ..models import CalculatedLine, CalculatedQuote, QuoteSnapshot
 
 
@@ -31,8 +32,13 @@ def export_holded_payload(
     snapshot: QuoteSnapshot,
     calculated: CalculatedQuote,
 ) -> dict:
-    """Genera un payload compatible con la API de Holded (sin enviarlo)."""
-    header = snapshot.header
+    """Genera un payload compatible con la API de Holded (sin enviarlo).
+
+    Las condiciones/observaciones incluyen siempre protección de datos y
+    transferencia bancaria, añadiéndolas si no estaban presentes.
+    """
+    enriched = ensure_required_document_sections(snapshot)
+    header = enriched.header
     items = [_format_item(cl) for cl in calculated.lines]
 
     return {

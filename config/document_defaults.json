@@ -1,0 +1,11 @@
+{
+  "bank": {
+    "entity": "BBVA",
+    "iban": "ES12 0182 1234 5678 9012 3456",
+    "holder": "Index Clima S.L."
+  },
+  "company": {
+    "name": "Index Clima S.L.",
+    "email": "info@indexclima.com"
+  }
+}

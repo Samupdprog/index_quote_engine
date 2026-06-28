@@ -1,4 +1,4 @@
-# index_quote_engine · v0.7
+# index_quote_engine · v0.8
 
 Motor de generación y cálculo de presupuestos para **Index Clima**.
 
@@ -18,6 +18,7 @@ Motor de generación y cálculo de presupuestos para **Index Clima**.
 - Guarda y recupera presupuestos como archivos JSON locales (`data/quotes/`).
 - Informe interno HTML: semáforo visual (OK/REVISAR/PELIGRO), tarjetas de KPIs, resumen rápido, recomendaciones de revisión, tabla de líneas.
 - **Búsqueda local avanzada**: busca por cliente, proveedor, texto libre, estado, tipo, tags, beneficio, total, warnings y problemas — sin base de datos.
+- **Herramientas para EON**: fachada segura para que EON opere el sistema sin tocar JSON directamente.
 
 ## Qué NO hace todavía
 
@@ -56,7 +57,7 @@ pip install -e ".[dev]"
 .venv/bin/pytest -v              # Linux / Mac
 ```
 
-Resultado esperado: **264 passed** (v0.7).
+Resultado esperado: **300 passed** (v0.8).
 
 ---
 
@@ -335,6 +336,83 @@ Cuando está activo, la base de venta es el **PVP bruto del proveedor** (no el c
 | `supplier_discounts` | `descuentosProveedor`, `descuentos`, `dto` |
 | `margin` | `margen` |
 | `tax` | `igic` |
+
+---
+
+## Herramientas para EON
+
+A partir de v0.8, el motor expone una capa de herramientas seguras para que EON pueda operar sin tocar archivos JSON directamente. EON no debe leer ni escribir en `data/quotes/` manualmente — todo pasa por estas funciones.
+
+Las herramientas disponibles son:
+
+| Herramienta | Descripción |
+|---|---|
+| `eon_search_quotes` | Busca presupuestos con filtros opcionales |
+| `eon_get_quote` | Carga un presupuesto por ID |
+| `eon_summarize_quote` | Resumen legible con semáforo y recomendaciones |
+| `eon_calculate_quote` | Calcula totales, líneas e IGIC |
+| `eon_duplicate_quote` | Crea una copia con nuevo ID |
+| `eon_apply_commands` | Aplica comandos en modo `copy`, `overwrite` o `dry_run` |
+| `eon_generate_internal_report` | Informe interno dict o HTML |
+| `eon_export_holded_payload` | Payload JSON para Holded (sin enviar) |
+| `eon_archive_quote` | Archiva un presupuesto |
+
+Por defecto, `eon_apply_commands` usa `save_mode="copy"` — crea una nueva copia en lugar de sobrescribir el original. Esto protege el presupuesto base ante cambios accidentales.
+
+Ejemplos conceptuales:
+
+```python
+from quote_engine.eon_tools import *
+
+# Buscar presupuestos de un cliente
+result = eon_search_quotes({"client_name": "Citanias", "status": "draft"})
+
+# Duplicar antes de modificar
+result = eon_duplicate_quote("PRE-2026-0001")
+new_id = result["result_quote_id"]
+
+# Aplicar cambios en copia (por defecto)
+result = eon_apply_commands("PRE-2026-0001", [
+    {"type": "set_global_margin", "margin": 38}
+])
+# result["result_quote_id"] → nuevo presupuesto con los cambios
+
+# Probar cambios sin guardar
+result = eon_apply_commands("PRE-2026-0001", [...], save_mode="dry_run")
+
+# Generar informe
+result = eon_generate_internal_report("PRE-2026-0001", html=True)
+
+# Exportar a Holded
+result = eon_export_holded_payload("PRE-2026-0001")
+```
+
+Endpoints de API:
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| `GET` | `/eon/tools` | Lista todas las herramientas |
+| `GET` | `/eon/search` | Búsqueda con filtros |
+| `GET` | `/eon/quotes/{id}` | Carga presupuesto |
+| `GET` | `/eon/quotes/{id}/summary` | Resumen con semáforo |
+| `GET` | `/eon/quotes/{id}/calculate` | Cálculo de totales |
+| `POST` | `/eon/quotes/{id}/duplicate` | Duplicar |
+| `POST` | `/eon/quotes/{id}/commands` | Aplicar comandos |
+| `GET` | `/eon/quotes/{id}/report` | Informe interno |
+| `GET` | `/eon/quotes/{id}/report/html` | Informe HTML |
+| `GET` | `/eon/quotes/{id}/export/holded` | Payload Holded |
+| `POST` | `/eon/quotes/{id}/archive` | Archivar |
+
+CLI:
+
+```bash
+# Ver herramientas disponibles
+python -m quote_cli eon-tools
+
+# Resumen de un presupuesto
+python -m quote_cli eon-summary PRE-2026-0001
+python -m quote_cli eon-summary PRE-2026-0001 --json
+```
 
 ---
 

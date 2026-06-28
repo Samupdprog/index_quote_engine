@@ -17,6 +17,7 @@ from quote_engine.exporters.internal_report import (
     save_internal_report_html,
 )
 from quote_engine.models import QuoteSnapshot
+from quote_engine.eon_tools import eon_summarize_quote, list_eon_tools
 from quote_engine.search import find_recent_quotes, search_quotes, summarize_search_results
 
 
@@ -244,6 +245,53 @@ def cmd_export_holded(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_eon_tools(args: argparse.Namespace) -> int:
+    tools = list_eon_tools()
+    print(f"Herramientas EON disponibles ({len(tools)}):\n")
+    for t in tools:
+        params = ", ".join(t["params"])
+        print(f"  {t['name']}({params})")
+        print(f"    {t['description']}")
+        print()
+    return 0
+
+
+def cmd_eon_summary(args: argparse.Namespace) -> int:
+    result = eon_summarize_quote(args.quote_id)
+    if not result["ok"]:
+        print(f"Error: {result['error']}", file=sys.stderr)
+        return 1
+
+    if args.output_json:
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0
+
+    d = result["data"]
+    print(f"ID:             {d.get('id', '?')}")
+    print(f"Cliente:        {d.get('client_name') or '(sin cliente)'}")
+    print(f"Estado:         {d.get('status', '?')}")
+    print(f"Semáforo:       [{d.get('report_label', '?')}]")
+    print(f"Total cliente:  {d.get('final_total', 0):.2f} €")
+    pct = d.get("gross_profit_percent")
+    pct_str = f"{pct:.1f}%" if pct is not None else "N/A"
+    print(f"Beneficio:      {d.get('gross_profit', 0):.2f} € ({pct_str})")
+    print(f"Proveedores:    {', '.join(d.get('suppliers', [])) or '(sin proveedor)'}")
+    print(f"Líneas:         {d.get('line_count', 0)}")
+    print(f"Problemas:      {d.get('problems_count', 0)}")
+    print(f"Warnings:       {d.get('warnings_count', 0)}")
+    if d.get("human_summary"):
+        print()
+        print("Resumen rápido:")
+        for s in d["human_summary"]:
+            print(f"  · {s}")
+    if d.get("review_recommendations"):
+        print()
+        print("Qué revisar:")
+        for r in d["review_recommendations"]:
+            print(f"  ! {r}")
+    return 0
+
+
 def cmd_search(args: argparse.Namespace) -> int:
     has_warnings: bool | None = None
     if args.has_warnings:
@@ -442,6 +490,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_exp.add_argument("--output", help="Ruta del archivo de salida (opcional)")
     p_exp.add_argument("--json", dest="output_json", action="store_true", help="Salida JSON en pantalla")
     p_exp.set_defaults(func=cmd_export_holded)
+
+    # eon-tools
+    p_eon = sub.add_parser("eon-tools", help="Listar herramientas disponibles para EON")
+    p_eon.set_defaults(func=cmd_eon_tools)
+
+    # eon-summary
+    p_eon_sum = sub.add_parser("eon-summary", help="Resumen EON de un presupuesto")
+    p_eon_sum.add_argument("quote_id", help="ID del presupuesto")
+    p_eon_sum.add_argument("--json", dest="output_json", action="store_true", help="Salida JSON")
+    p_eon_sum.set_defaults(func=cmd_eon_summary)
 
     # search
     p_search = sub.add_parser("search", help="Buscar presupuestos guardados")

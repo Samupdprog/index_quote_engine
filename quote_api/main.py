@@ -5,6 +5,7 @@ import json
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
+from .eon_routes import eon_router
 from .routes import router
 
 
@@ -34,3 +35,4 @@ app = FastAPI(
 )
 
 app.include_router(router)
+app.include_router(eon_router)

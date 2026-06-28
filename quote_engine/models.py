@@ -10,6 +10,26 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 LineType = Literal["material", "labor", "travel", "global_work", "adjustment"]
 SaleMode = Literal["margin", "markup_unit", "fixed_unit", "fixed_total"]
+QuoteStatus = Literal["draft", "sent", "accepted", "rejected", "archived"]
+
+
+# ---------------------------------------------------------------------------
+# Metadata de presupuesto guardado
+# ---------------------------------------------------------------------------
+
+
+class QuoteMetadata(BaseModel):
+    id: str
+    created_at: str
+    updated_at: str
+    created_by: str | None = None
+    source: str = "api"
+    status: QuoteStatus = "draft"
+    project_type: str | None = None
+    tags: list[str] = Field(default_factory=list)
+    client_reference: str | None = None
+    internal_notes: str | None = None
+    version: str = "0.4"
 
 
 # ---------------------------------------------------------------------------

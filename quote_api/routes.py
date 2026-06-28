@@ -16,6 +16,7 @@ from quote_engine.exporters.internal_report import (
 )
 from quote_engine.models import QuoteSnapshot
 from quote_engine.normalizer import normalize_supplier_json
+from quote_engine import storage
 from quote_engine.validators import CommandError
 
 router = APIRouter()
@@ -46,6 +47,25 @@ class CommandsRequest(BaseModel):
 
 class ExportRequest(BaseModel):
     snapshot: QuoteSnapshot
+
+
+class SaveQuoteRequest(BaseModel):
+    snapshot: QuoteSnapshot
+    quote_id: str | None = None
+    created_by: str | None = None
+    source: str = "api"
+
+
+class ListQuotesQuery(BaseModel):
+    status: str | None = None
+    client_name: str | None = None
+    project_type: str | None = None
+    tag: str | None = None
+    limit: int | None = None
+
+
+class MetadataUpdateRequest(BaseModel):
+    updates: dict[str, Any]
 
 
 # ---------------------------------------------------------------------------
@@ -127,3 +147,85 @@ def export_internal_html(body: ExportRequest) -> dict:
     calculated = calculate_quote(body.snapshot)
     html = export_internal_report_html(body.snapshot, calculated)
     return {"html": html}
+
+
+# ---------------------------------------------------------------------------
+# Storage endpoints
+# ---------------------------------------------------------------------------
+
+@router.post("/storage/quotes")
+def storage_save_quote(body: SaveQuoteRequest) -> dict:
+    try:
+        quote_id = storage.save_quote(
+            body.snapshot,
+            quote_id=body.quote_id,
+            created_by=body.created_by,
+            source=body.source,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    doc = storage.load_quote(quote_id)
+    return {"quote_id": quote_id, "metadata": doc["metadata"]}
+
+
+@router.get("/storage/quotes")
+def storage_list_quotes(
+    status: str | None = None,
+    client_name: str | None = None,
+    project_type: str | None = None,
+    tag: str | None = None,
+    limit: int | None = None,
+) -> dict:
+    results = storage.list_quotes(
+        status=status,
+        client_name=client_name,
+        project_type=project_type,
+        tag=tag,
+        limit=limit,
+    )
+    return {"quotes": results, "total": len(results)}
+
+
+@router.get("/storage/quotes/{quote_id}")
+def storage_get_quote(quote_id: str) -> dict:
+    try:
+        doc = storage.load_quote(quote_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return doc
+
+
+@router.post("/storage/quotes/{quote_id}/duplicate")
+def storage_duplicate_quote(quote_id: str, new_id: str | None = None) -> dict:
+    try:
+        new_quote_id = storage.duplicate_quote(quote_id, new_quote_id=new_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    doc = storage.load_quote(new_quote_id)
+    return {"quote_id": new_quote_id, "metadata": doc["metadata"]}
+
+
+@router.patch("/storage/quotes/{quote_id}/metadata")
+def storage_update_metadata(quote_id: str, body: MetadataUpdateRequest) -> dict:
+    try:
+        doc = storage.update_quote_metadata(quote_id, body.updates)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"quote_id": quote_id, "metadata": doc["metadata"]}
+
+
+@router.post("/storage/quotes/{quote_id}/archive")
+def storage_archive_quote(quote_id: str) -> dict:
+    try:
+        doc = storage.archive_quote(quote_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"quote_id": quote_id, "status": doc["metadata"]["status"]}

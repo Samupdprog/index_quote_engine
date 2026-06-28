@@ -1,0 +1,77 @@
+{
+  "metadata": {
+    "id": "PRE-2026-0001",
+    "created_at": "2026-06-28T18:30:00",
+    "updated_at": "2026-06-28T18:45:00",
+    "created_by": "EON",
+    "source": "api",
+    "status": "draft",
+    "project_type": "climatizacion",
+    "tags": ["frigicoll", "split", "vivienda"],
+    "client_reference": null,
+    "internal_notes": null,
+    "version": "0.4"
+  },
+  "snapshot": {
+    "header": {
+      "schema_version": 1,
+      "quote_number": "PRE-2026-0001",
+      "client_name": "Comunidad de Propietarios Las Mimosas",
+      "client_tax_id": "H35001234",
+      "client_address": "Calle Las Mimosas 3, Las Palmas de Gran Canaria",
+      "date": "2026-06-28",
+      "title": "Instalación split 1x1 vivienda",
+      "validity": "30 días",
+      "payment": "50% a la firma y 50% al finalizar",
+      "global_margin": 35.0,
+      "tax": 7.0,
+      "include_tax": false,
+      "conditions": "PROTECCIÓN DE DATOS: En cumplimiento del Reglamento (UE) 2016/679 (RGPD) y la Ley Orgánica 3/2018 (LOPDGDD), le informamos de que sus datos personales serán tratados por Index Clima S.L. para la gestión de la relación comercial. Puede ejercer sus derechos de acceso, rectificación, supresión y portabilidad dirigiéndose a info@indexclima.com.\n\nCONDICIONES DE PAGO\nTransferencia bancaria.\nBBVA: ES12 0182 1234 5678 9012 3456",
+      "internal_notes": "Cliente captado por referido. Instalación en piso bajo."
+    },
+    "lines": [
+      {
+        "id": "fri-001",
+        "type": "material",
+        "code": "DAI-FTXC25C",
+        "concept": "Split Daikin 1x1 2.5kW",
+        "description": "Unidad interior + exterior Daikin FTXC25C",
+        "quantity": 1.0,
+        "unit": "ud",
+        "supplier": "Frigicoll",
+        "supplier_invoice": null,
+        "supplier_gross_unit_price": 550.0,
+        "supplier_discounts": [40, 5],
+        "supplier_net_unit_cost": null,
+        "total_cost": null,
+        "sale_mode": "margin",
+        "margin": 35.0,
+        "sale_value": null,
+        "tax": 7.0,
+        "pass_supplier_discount_to_client": false,
+        "notes": null
+      },
+      {
+        "id": "mo-001",
+        "type": "labor",
+        "code": null,
+        "concept": "Mano de obra instalación",
+        "description": "Instalación completa split 1x1",
+        "quantity": 1.0,
+        "unit": "ud",
+        "supplier": null,
+        "supplier_invoice": null,
+        "supplier_gross_unit_price": null,
+        "supplier_discounts": [],
+        "supplier_net_unit_cost": null,
+        "total_cost": null,
+        "sale_mode": "fixed_total",
+        "margin": null,
+        "sale_value": 250.0,
+        "tax": 7.0,
+        "pass_supplier_discount_to_client": false,
+        "notes": null
+      }
+    ]
+  }
+}

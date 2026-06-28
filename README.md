@@ -1,4 +1,4 @@
-# index_quote_engine · MVP 0.1
+# index_quote_engine · v0.4
 
 Motor de generación y cálculo de presupuestos para **Index Clima**.
 
@@ -52,7 +52,7 @@ pip install -e ".[dev]"
 .venv/bin/pytest -v              # Linux / Mac
 ```
 
-Resultado esperado: **54 passed**.
+Resultado esperado: **161 passed** (v0.4).
 
 ---
 
@@ -84,6 +84,12 @@ http://127.0.0.1:8000/docs
 | `POST` | `/quotes/export/holded` | Exportar payload Holded |
 | `POST` | `/quotes/export/internal-report` | Informe interno (dict) |
 | `POST` | `/quotes/export/internal-report/html` | Informe interno (HTML) |
+| `POST` | `/storage/quotes` | Guardar presupuesto |
+| `GET` | `/storage/quotes` | Listar presupuestos guardados |
+| `GET` | `/storage/quotes/{id}` | Cargar presupuesto por ID |
+| `POST` | `/storage/quotes/{id}/duplicate` | Duplicar presupuesto |
+| `PATCH` | `/storage/quotes/{id}/metadata` | Actualizar metadata |
+| `POST` | `/storage/quotes/{id}/archive` | Archivar presupuesto |
 
 ---
 
@@ -251,15 +257,75 @@ Cuando está activo, la base de venta es el **PVP bruto del proveedor** (no el c
 
 ---
 
+## Guardado local de presupuestos
+
+A partir de v0.4 los presupuestos se pueden guardar y recuperar como archivos JSON locales. No se usa base de datos.
+
+**Dónde se guardan**
+
+```
+data/quotes/PRE-2026-0001.json
+data/quotes/PRE-2026-0002.json
+...
+```
+
+**Cómo se identifican**
+
+Cada presupuesto recibe un ID correlativo con formato `PRE-YYYY-NNNN`. Se genera automáticamente al guardar o se puede indicar uno explícito.
+
+**Metadata incluida**
+
+```json
+{
+  "metadata": {
+    "id": "PRE-2026-0001",
+    "created_at": "2026-06-28T18:30:00",
+    "updated_at": "2026-06-28T18:45:00",
+    "created_by": "EON",
+    "source": "api",
+    "status": "draft",
+    "project_type": "climatizacion",
+    "tags": ["split", "vivienda"],
+    "client_reference": null,
+    "internal_notes": null,
+    "version": "0.4"
+  },
+  "snapshot": { ... }
+}
+```
+
+`status` puede ser: `draft`, `sent`, `accepted`, `rejected`, `archived`.  
+`created_at` nunca cambia. `updated_at` se actualiza en cada guardado.
+
+**Endpoints de almacenamiento**
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| `POST` | `/storage/quotes` | Guardar presupuesto |
+| `GET` | `/storage/quotes` | Listar (con filtros opcionales) |
+| `GET` | `/storage/quotes/{id}` | Cargar por ID |
+| `POST` | `/storage/quotes/{id}/duplicate` | Duplicar |
+| `PATCH` | `/storage/quotes/{id}/metadata` | Actualizar metadata |
+| `POST` | `/storage/quotes/{id}/archive` | Archivar |
+
+Los presupuestos archivados no se borran físicamente; solo cambia el `status`.
+
+**Sin base de datos**
+
+Todo se guarda como JSON legible en `data/quotes/`. No se requiere MongoDB, PostgreSQL ni SQLite.
+
+---
+
 ## Archivos de ejemplo
 
 ```
 data/examples/
-├── basic_supplier_import.json         — importación básica con 3 líneas
-├── command_set_margin.json            — cambiar margen de una línea
-├── command_apply_supplier_margin.json — aplicar margen a proveedor
+├── basic_supplier_import.json          — importación básica con 3 líneas
+├── command_set_margin.json             — cambiar margen de una línea
+├── command_apply_supplier_margin.json  — aplicar margen a proveedor
 ├── command_pass_supplier_discount.json — repercutir descuento de proveedor al cliente
-└── holded_export_example.json         — payload de exportación Holded
+├── holded_export_example.json          — payload de exportación Holded
+└── storage_quote_example.json          — presupuesto guardado con metadata (v0.4)
 ```
 
 ---
@@ -269,20 +335,26 @@ data/examples/
 ```
 index_quote_engine/
 ├── quote_engine/          — librería Python pura (núcleo)
-│   ├── models.py          — QuoteSnapshot, QuoteLine, CalculatedQuote
+│   ├── models.py          — QuoteSnapshot, QuoteLine, CalculatedQuote, QuoteMetadata
 │   ├── discounts.py       — descuentos encadenados
 │   ├── calculator.py      — calculate_quote()
 │   ├── normalizer.py      — normalize_supplier_json()
 │   ├── commands.py        — apply_command() / apply_commands()
 │   ├── validators.py      — validaciones compartidas
+│   ├── document_rules.py  — reglas documentales obligatorias
+│   ├── storage.py         — guardado/carga local de presupuestos (v0.4)
 │   └── exporters/
 │       ├── holded.py
 │       └── internal_report.py
 ├── quote_api/             — FastAPI (sin lógica de negocio en endpoints)
 │   ├── main.py
 │   └── routes.py
-├── tests/                 — 54 tests (pytest)
-├── data/examples/         — JSONs de ejemplo
+├── tests/                 — 159 tests (pytest)
+├── data/
+│   ├── quotes/            — presupuestos guardados (PRE-YYYY-NNNN.json)
+│   ├── examples/          — JSONs de ejemplo
+│   ├── exports/           — exportaciones futuras
+│   └── reports/           — informes futuros
 ├── pyproject.toml
 └── README.md
 ```

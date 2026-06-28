@@ -285,3 +285,89 @@ def test_export_internal_report_dict_compat(snap_two_suppliers: QuoteSnapshot) -
     assert "totals" in report
     assert "lines" in report
     assert len(report["lines"]) == 3
+
+
+# ---------------------------------------------------------------------------
+# v0.6.1 — tests nuevos
+# ---------------------------------------------------------------------------
+
+def test_html_title_prioritizes_metadata_id() -> None:
+    """El título H1 debe usar metadata.id aunque exista quote_number."""
+    snap = QuoteSnapshot.model_validate({
+        "header": {
+            "global_margin": 35, "tax": 7, "include_tax": False,
+            "client_name": "X", "quote_number": "PRE-2026-0001",
+        },
+        "lines": [],
+    })
+    meta = {"id": "PRE-TEST-REPORT", "status": "draft"}
+    html = build_internal_report_html(snap, metadata=meta)
+    # El h1 debe contener el metadata.id
+    assert "Informe Interno — PRE-TEST-REPORT" in html
+
+
+def test_html_shows_metadata_id(snap_two_suppliers: QuoteSnapshot) -> None:
+    meta = {"id": "PRE-TEST-REPORT", "status": "draft"}
+    html = build_internal_report_html(snap_two_suppliers, metadata=meta)
+    assert "PRE-TEST-REPORT" in html
+
+
+def test_html_shows_quote_number_if_present() -> None:
+    """Si header.quote_number existe, debe aparecer como 'Número presupuesto'."""
+    snap = QuoteSnapshot.model_validate({
+        "header": {
+            "global_margin": 35, "tax": 7, "include_tax": False,
+            "client_name": "Comunidad Las Mimosas", "quote_number": "PRE-2026-0001",
+        },
+        "lines": [],
+    })
+    meta = {"id": "PRE-TEST-REPORT", "status": "draft"}
+    html = build_internal_report_html(snap, metadata=meta)
+    assert "Número presupuesto" in html
+    assert "PRE-2026-0001" in html
+
+
+def test_html_no_quote_number_section_when_absent() -> None:
+    """Si no hay quote_number, no debe aparecer la línea de número presupuesto."""
+    snap = QuoteSnapshot.model_validate({
+        "header": {"global_margin": 35, "tax": 7, "include_tax": False, "client_name": "X"},
+        "lines": [],
+    })
+    html = build_internal_report_html(snap, metadata={"id": "PRE-TEST-001"})
+    assert "Número presupuesto" not in html
+
+
+def test_warnings_not_duplicated_in_problems() -> None:
+    """Los warnings del motor NO deben aparecer dentro de 'Problemas detectados'."""
+    snap = QuoteSnapshot.model_validate({
+        "header": {"global_margin": 35, "tax": 7, "include_tax": False},
+        "lines": [
+            {
+                "id": "l1", "type": "material", "description": "Línea sin coste",
+                "quantity": 1, "unit": "ud",
+                "sale_mode": "fixed_unit", "sale_value": 50.0,
+            },
+        ],
+    })
+    report = build_internal_report(snap)
+    # Los problems solo deben ser los estructurales (coste 0, etc.)
+    # No deben contener entradas con prefijo "warning:"
+    problem_issues = [p["issue"] for p in report["problems"]]
+    assert not any(i.startswith("warning:") for i in problem_issues)
+
+
+def test_zero_cost_still_detected_as_problem() -> None:
+    """Coste 0 sigue siendo detectado como problema (no afectado por el cambio)."""
+    snap = QuoteSnapshot.model_validate({
+        "header": {"global_margin": 35, "tax": 7, "include_tax": False},
+        "lines": [
+            {
+                "id": "l1", "type": "material", "description": "Sin coste",
+                "quantity": 1, "unit": "ud",
+                "sale_mode": "fixed_unit", "sale_value": 50.0,
+            },
+        ],
+    })
+    report = build_internal_report(snap)
+    issues = [p["issue"] for p in report["problems"]]
+    assert any("coste 0" in i for i in issues)

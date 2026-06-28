@@ -66,9 +66,6 @@ def _detect_problems(lines_data: list[dict]) -> list[dict]:
             problems.append({"line": desc, "issue": f"margen bajo ({ln['gross_profit_percent']:.1f}%)"})
         if ln["type"] == "material" and not ln["supplier"]:
             problems.append({"line": desc, "issue": "material sin proveedor"})
-        if ln["warnings"]:
-            for w in ln["warnings"]:
-                problems.append({"line": desc, "issue": f"warning: {w}"})
     return problems
 
 
@@ -281,9 +278,16 @@ def build_internal_report_html(
     {meta_rows}
   </table>"""
 
-    title = header.get("quote_number") or meta.get("id") or "Presupuesto"
+    # Título: prioriza metadata.id; si también hay quote_number, se muestra aparte
+    title = meta.get("id") or header.get("quote_number") or "Presupuesto"
+    quote_number = header.get("quote_number")
     client = header.get("client_name") or "(sin cliente)"
     pct_total = _pct_str(totals["gross_profit_percent"])
+
+    quote_number_html = (
+        f'<p><b>Número presupuesto:</b> {_esc(quote_number)}</p>'
+        if quote_number else ""
+    )
 
     return f"""<!DOCTYPE html>
 <html lang="es">
@@ -321,6 +325,7 @@ def build_internal_report_html(
   <span class="internal-stamp">USO INTERNO — Index Clima</span>
   <h1>Informe Interno — {_esc(title)}</h1>
   <p><b>Cliente:</b> {_esc(client)} &nbsp;|&nbsp; <b>Fecha:</b> {_esc(header.get('date'))} &nbsp;|&nbsp; <b>Título:</b> {_esc(header.get('title'))}</p>
+  {quote_number_html}
   {meta_html}
 
   <h2>Totales</h2>

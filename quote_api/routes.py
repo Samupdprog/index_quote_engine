@@ -19,6 +19,7 @@ from quote_engine.exporters.internal_report import (
 from quote_engine.models import QuoteSnapshot
 from quote_engine.normalizer import normalize_supplier_json
 from quote_engine import storage
+from quote_engine.search import find_recent_quotes, search_quotes
 from quote_engine.validators import CommandError
 
 router = APIRouter()
@@ -243,6 +244,50 @@ def storage_report_dict(quote_id: str) -> dict:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     snap = QuoteSnapshot.model_validate(doc["snapshot"])
     return build_internal_report(snap, metadata=doc.get("metadata"))
+
+
+@router.get("/storage/search")
+def storage_search(
+    q: str | None = None,
+    client: str | None = None,
+    supplier: str | None = None,
+    status: str | None = None,
+    project_type: str | None = None,
+    tag: str | None = None,
+    min_profit: float | None = None,
+    max_profit: float | None = None,
+    min_total: float | None = None,
+    max_total: float | None = None,
+    has_warnings: bool | None = None,
+    has_problems: bool | None = None,
+    sort_by: str = "updated_at",
+    descending: bool = True,
+    limit: int | None = None,
+) -> dict:
+    results = search_quotes(
+        query=q,
+        client_name=client,
+        supplier=supplier,
+        status=status,
+        project_type=project_type,
+        tag=tag,
+        min_profit=min_profit,
+        max_profit=max_profit,
+        min_total=min_total,
+        max_total=max_total,
+        has_warnings=has_warnings,
+        has_problems=has_problems,
+        sort_by=sort_by,
+        descending=descending,
+        limit=limit,
+    )
+    return {"results": results, "total": len(results)}
+
+
+@router.get("/storage/recent")
+def storage_recent(limit: int = 10) -> dict:
+    results = find_recent_quotes(limit=limit)
+    return {"results": results, "total": len(results)}
 
 
 @router.get("/storage/quotes/{quote_id}/report/html")

@@ -17,6 +17,7 @@ from quote_engine.exporters.internal_report import (
     save_internal_report_html,
 )
 from quote_engine.models import QuoteSnapshot
+from quote_engine.search import find_recent_quotes, search_quotes, summarize_search_results
 
 
 def _load_snapshot_from_file(path: Path) -> QuoteSnapshot:
@@ -243,6 +244,77 @@ def cmd_export_holded(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_search(args: argparse.Namespace) -> int:
+    has_warnings: bool | None = None
+    if args.has_warnings:
+        has_warnings = True
+
+    has_problems: bool | None = None
+    if args.has_problems:
+        has_problems = True
+
+    descending = not args.asc
+
+    results = search_quotes(
+        query=args.query,
+        client_name=args.client,
+        supplier=args.supplier,
+        status=args.status,
+        project_type=args.project_type,
+        tag=args.tag,
+        min_profit=args.min_profit,
+        max_profit=args.max_profit,
+        min_total=args.min_total,
+        max_total=args.max_total,
+        has_warnings=has_warnings,
+        has_problems=has_problems,
+        sort_by=args.sort_by,
+        descending=descending,
+        limit=args.limit,
+    )
+
+    if args.output_json:
+        print(json.dumps(results, ensure_ascii=False, indent=2))
+        return 0
+
+    print(summarize_search_results(results))
+    if not results:
+        return 0
+    print()
+    for r in results:
+        qid = r["id"] or "?"
+        status = r["status"] or "?"
+        client = r["client_name"] or "(sin cliente)"
+        total = r["final_total"]
+        profit = r["gross_profit"]
+        label = r["report_status"]
+        print(f"{qid} | {status} | {client} | Total: {total:.2f} € | Beneficio: {profit:.2f} € | Estado: {label}")
+
+    return 0
+
+
+def cmd_recent(args: argparse.Namespace) -> int:
+    results = find_recent_quotes(limit=args.limit)
+
+    if args.output_json:
+        print(json.dumps(results, ensure_ascii=False, indent=2))
+        return 0
+
+    print(summarize_search_results(results))
+    if not results:
+        return 0
+    print()
+    for r in results:
+        qid = r["id"] or "?"
+        status = r["status"] or "?"
+        client = r["client_name"] or "(sin cliente)"
+        updated = r["updated_at"] or "?"
+        total = r["final_total"]
+        print(f"{qid} | {status} | {client} | Total: {total:.2f} € | Actualizado: {updated}")
+
+    return 0
+
+
 def cmd_report(args: argparse.Namespace) -> int:
     try:
         doc = _storage.load_quote(args.quote_id)
@@ -370,6 +442,32 @@ def build_parser() -> argparse.ArgumentParser:
     p_exp.add_argument("--output", help="Ruta del archivo de salida (opcional)")
     p_exp.add_argument("--json", dest="output_json", action="store_true", help="Salida JSON en pantalla")
     p_exp.set_defaults(func=cmd_export_holded)
+
+    # search
+    p_search = sub.add_parser("search", help="Buscar presupuestos guardados")
+    p_search.add_argument("query", nargs="?", default=None, help="Texto libre (busca en cliente, proveedor, líneas, tags...)")
+    p_search.add_argument("--client", help="Filtrar por nombre de cliente (parcial)")
+    p_search.add_argument("--supplier", help="Filtrar por proveedor (parcial)")
+    p_search.add_argument("--status", help="Filtrar por estado")
+    p_search.add_argument("--project-type", dest="project_type", help="Filtrar por tipo de proyecto")
+    p_search.add_argument("--tag", help="Filtrar por tag")
+    p_search.add_argument("--min-profit", dest="min_profit", type=float, help="Beneficio mínimo")
+    p_search.add_argument("--max-profit", dest="max_profit", type=float, help="Beneficio máximo")
+    p_search.add_argument("--min-total", dest="min_total", type=float, help="Total cliente mínimo")
+    p_search.add_argument("--max-total", dest="max_total", type=float, help="Total cliente máximo")
+    p_search.add_argument("--has-warnings", dest="has_warnings", action="store_true", default=False, help="Solo con warnings")
+    p_search.add_argument("--has-problems", dest="has_problems", action="store_true", default=False, help="Solo con problemas")
+    p_search.add_argument("--sort-by", dest="sort_by", default="updated_at", help="Campo de ordenación (default: updated_at)")
+    p_search.add_argument("--asc", action="store_true", default=False, help="Orden ascendente (default: descendente)")
+    p_search.add_argument("--limit", type=int, help="Límite de resultados")
+    p_search.add_argument("--json", dest="output_json", action="store_true", help="Salida JSON")
+    p_search.set_defaults(func=cmd_search)
+
+    # recent
+    p_recent = sub.add_parser("recent", help="Últimos presupuestos por fecha de actualización")
+    p_recent.add_argument("--limit", type=int, default=10, help="Número de resultados (default: 10)")
+    p_recent.add_argument("--json", dest="output_json", action="store_true", help="Salida JSON")
+    p_recent.set_defaults(func=cmd_recent)
 
     # report
     p_rep = sub.add_parser("report", help="Generar informe interno HTML")

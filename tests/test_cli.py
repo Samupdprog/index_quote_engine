@@ -325,3 +325,82 @@ def test_report_html_contains_cards(
     assert "cards" in content
     assert "Resumen rápido" in content
     assert "Qué revisar" in content
+
+
+# ---------------------------------------------------------------------------
+# CLI search / recent (v0.7)
+# ---------------------------------------------------------------------------
+
+def test_cli_search_empty(capsys: pytest.CaptureFixture) -> None:
+    rc = main(["search"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "No se encontraron" in out
+
+
+def test_cli_search_finds_quote(saved_quote_id: str, capsys: pytest.CaptureFixture) -> None:
+    rc = main(["search", "Cliente Test CLI"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert saved_quote_id in out
+
+
+def test_cli_search_by_client(saved_quote_id: str, capsys: pytest.CaptureFixture) -> None:
+    rc = main(["search", "--client", "Cliente Test"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert saved_quote_id in out
+
+
+def test_cli_search_by_supplier(saved_quote_id: str, capsys: pytest.CaptureFixture) -> None:
+    rc = main(["search", "--supplier", "Frigicoll"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert saved_quote_id in out
+
+
+def test_cli_search_json(saved_quote_id: str, capsys: pytest.CaptureFixture) -> None:
+    rc = main(["search", "--json"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    parsed = json.loads(out)
+    assert isinstance(parsed, list)
+    assert len(parsed) >= 1
+    assert parsed[0]["id"] == saved_quote_id
+
+
+def test_cli_search_no_results(saved_quote_id: str, capsys: pytest.CaptureFixture) -> None:
+    rc = main(["search", "texto_que_no_existe_xyz"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "No se encontraron" in out
+
+
+def test_cli_search_limit(saved_quote_id: str, capsys: pytest.CaptureFixture) -> None:
+    rc = main(["search", "--limit", "1"])
+    assert rc == 0
+
+
+def test_cli_recent(saved_quote_id: str, capsys: pytest.CaptureFixture) -> None:
+    rc = main(["recent"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert saved_quote_id in out
+
+
+def test_cli_recent_json(saved_quote_id: str, capsys: pytest.CaptureFixture) -> None:
+    rc = main(["recent", "--json"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    parsed = json.loads(out)
+    assert isinstance(parsed, list)
+    assert len(parsed) >= 1
+
+
+def test_cli_recent_limit(saved_quote_id: str, capsys: pytest.CaptureFixture) -> None:
+    rc = main(["recent", "--limit", "1"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    lines = [l for l in out.strip().splitlines() if l.strip()]
+    # 1 línea de resumen + 1 línea vacía + 1 línea de resultado = al menos 1 resultado
+    assert any(saved_quote_id in l for l in lines)

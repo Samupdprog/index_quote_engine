@@ -1,4 +1,4 @@
-# index_quote_engine · v0.6.2
+# index_quote_engine · v0.7
 
 Motor de generación y cálculo de presupuestos para **Index Clima**.
 
@@ -17,6 +17,7 @@ Motor de generación y cálculo de presupuestos para **Index Clima**.
 - CLI para operar sin Swagger: `python -m quote_cli` o `index-quote`.
 - Guarda y recupera presupuestos como archivos JSON locales (`data/quotes/`).
 - Informe interno HTML: semáforo visual (OK/REVISAR/PELIGRO), tarjetas de KPIs, resumen rápido, recomendaciones de revisión, tabla de líneas.
+- **Búsqueda local avanzada**: busca por cliente, proveedor, texto libre, estado, tipo, tags, beneficio, total, warnings y problemas — sin base de datos.
 
 ## Qué NO hace todavía
 
@@ -55,7 +56,7 @@ pip install -e ".[dev]"
 .venv/bin/pytest -v              # Linux / Mac
 ```
 
-Resultado esperado: **217 passed** (v0.6.2).
+Resultado esperado: **264 passed** (v0.7).
 
 ---
 
@@ -334,6 +335,63 @@ Cuando está activo, la base de venta es el **PVP bruto del proveedor** (no el c
 | `supplier_discounts` | `descuentosProveedor`, `descuentos`, `dto` |
 | `margin` | `margen` |
 | `tax` | `igic` |
+
+---
+
+## Búsqueda local de presupuestos
+
+A partir de v0.7 es posible buscar entre los presupuestos guardados sin base de datos. La búsqueda lee directamente los archivos JSON de `data/quotes/`, calcula totales y semáforo en tiempo real, y aplica los filtros sobre los resultados.
+
+Sirve para que EON (u otros operadores) puedan localizar presupuestos antiguos por cliente, proveedor, rango de beneficio, estado, etc.
+
+```bash
+# Búsqueda por texto libre (cliente, proveedor, descripción de línea, tags...)
+python -m quote_cli search citanias
+python -m quote_cli search "bomba calor"
+
+# Filtros específicos
+python -m quote_cli search --client Citanias
+python -m quote_cli search --supplier Frigicoll
+python -m quote_cli search --status accepted
+python -m quote_cli search --project-type climatizacion
+python -m quote_cli search --tag split
+
+# Filtros numéricos
+python -m quote_cli search --min-profit 500
+python -m quote_cli search --max-total 2000
+
+# Filtros de calidad
+python -m quote_cli search --has-problems
+python -m quote_cli search --has-warnings
+
+# Combinados
+python -m quote_cli search citanias --status draft --min-profit 300 --limit 5
+
+# Últimos presupuestos actualizados
+python -m quote_cli recent
+python -m quote_cli recent --limit 5
+python -m quote_cli recent --json
+
+# Salida JSON
+python -m quote_cli search --supplier Frigicoll --json
+```
+
+Salida de texto:
+```
+3 presupuestos encontrados
+
+PRE-2026-0001 | draft | Citanias Obras Y Servicios Slu | Total: 878.93 € | Beneficio: 210.50 € | Estado: OK
+PRE-2026-0002 | accepted | Citanias Obras Y Servicios Slu | Total: 556.40 € | Beneficio: 120.00 € | Estado: REVISAR
+```
+
+Los endpoints de API equivalentes son:
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| `GET` | `/storage/search` | Búsqueda con filtros (query params) |
+| `GET` | `/storage/recent` | Últimos presupuestos |
+
+Parámetros de `/storage/search`: `q`, `client`, `supplier`, `status`, `project_type`, `tag`, `min_profit`, `max_profit`, `min_total`, `max_total`, `has_warnings`, `has_problems`, `sort_by`, `descending`, `limit`.
 
 ---
 

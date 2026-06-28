@@ -1,4 +1,4 @@
-# index_quote_engine · v0.5
+# index_quote_engine · v0.6
 
 Motor de generación y cálculo de presupuestos para **Index Clima**.
 
@@ -16,6 +16,7 @@ Motor de generación y cálculo de presupuestos para **Index Clima**.
 - API REST con FastAPI · documentación automática en `/docs`.
 - CLI para operar sin Swagger: `python -m quote_cli` o `index-quote`.
 - Guarda y recupera presupuestos como archivos JSON locales (`data/quotes/`).
+- Informe interno HTML: resumen por proveedor, detección de problemas, tabla de líneas.
 
 ## Qué NO hace todavía
 
@@ -54,7 +55,33 @@ pip install -e ".[dev]"
 .venv/bin/pytest -v              # Linux / Mac
 ```
 
-Resultado esperado: **176 passed** (v0.5).
+Resultado esperado: **195 passed** (v0.6).
+
+---
+
+## Informe interno HTML
+
+El informe interno es una herramienta **para uso exclusivo de Index Clima**. No es el presupuesto del cliente ni un PDF final. Sirve para revisar costes, beneficios, proveedores y detectar problemas antes de enviar el presupuesto.
+
+```bash
+# Generar informe en HTML
+python -m quote_cli report PRE-2026-0001 --output data/reports/PRE-2026-0001-report.html
+
+# Ver resumen en texto (sin --output)
+python -m quote_cli report PRE-2026-0001
+```
+
+El informe incluye:
+
+- Metadata del presupuesto (ID, estado, fechas, tipo, tags)
+- Totales (coste, venta, IGIC, total cliente, beneficio, %)
+- **Resumen por proveedor**: coste total, venta, beneficio, % y número de líneas
+- **Tabla de líneas** completa con coste unitario/total, venta unitario/total, IGIC, beneficio
+- **Detección de problemas**: coste 0, beneficio negativo, margen bajo, material sin proveedor
+- Notas internas
+- Color coding: rojo para beneficio negativo, amarillo para coste 0 o margen bajo
+
+Los archivos HTML son standalone, sin CDN ni dependencias externas.
 
 ---
 
@@ -89,6 +116,10 @@ python -m quote_cli archive PRE-2026-0001
 # Exportar payload Holded
 python -m quote_cli export-holded PRE-2026-0001
 python -m quote_cli export-holded PRE-2026-0001 --output data/exports/PRE-2026-0001-holded.json
+
+# Informe interno HTML
+python -m quote_cli report PRE-2026-0001
+python -m quote_cli report PRE-2026-0001 --output data/reports/PRE-2026-0001-report.html
 ```
 
 Si el paquete está instalado con `pip install -e .`, también está disponible como:
@@ -134,6 +165,8 @@ http://127.0.0.1:8000/docs
 | `POST` | `/storage/quotes/{id}/duplicate` | Duplicar presupuesto |
 | `PATCH` | `/storage/quotes/{id}/metadata` | Actualizar metadata |
 | `POST` | `/storage/quotes/{id}/archive` | Archivar presupuesto |
+| `GET` | `/storage/quotes/{id}/report` | Informe interno (dict) |
+| `GET` | `/storage/quotes/{id}/report/html` | Informe interno (HTML) |
 
 ---
 
@@ -396,8 +429,8 @@ index_quote_engine/
 ├── quote_cli/             — CLI (argparse, sin dependencias extra)
 │   ├── __init__.py
 │   ├── __main__.py        — permite `python -m quote_cli`
-│   └── main.py            — list, show, calculate, save, duplicate, archive, export-holded
-├── tests/                 — 176 tests (pytest)
+│   └── main.py            — list, show, calculate, save, duplicate, archive, export-holded, report
+├── tests/                 — 195 tests (pytest)
 ├── data/
 │   ├── quotes/            — presupuestos guardados (PRE-YYYY-NNNN.json)
 │   ├── examples/          — JSONs de ejemplo

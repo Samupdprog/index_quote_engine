@@ -250,3 +250,36 @@ def test_save_with_tags_and_project_type(
     assert len(quotes) == 1
     assert "split" in quotes[0]["tags"]
     assert "vivienda" in quotes[0]["tags"]
+
+
+# ---------------------------------------------------------------------------
+# CLI report
+# ---------------------------------------------------------------------------
+
+def test_report_text_summary(saved_quote_id: str, capsys: pytest.CaptureFixture) -> None:
+    rc = main(["report", saved_quote_id])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert saved_quote_id in out
+    assert "Total cliente:" in out
+
+
+def test_report_output_creates_html(
+    saved_quote_id: str, tmp_path: Path, capsys: pytest.CaptureFixture
+) -> None:
+    out_file = tmp_path / "report.html"
+    rc = main(["report", saved_quote_id, "--output", str(out_file)])
+    assert rc == 0
+    assert out_file.exists()
+    content = out_file.read_text(encoding="utf-8")
+    assert "<!DOCTYPE html>" in content
+    assert "Cliente Test CLI" in content
+    out = capsys.readouterr().out
+    assert "Informe interno generado" in out
+
+
+def test_report_nonexistent_quote(capsys: pytest.CaptureFixture) -> None:
+    rc = main(["report", "PRE-9999-9999"])
+    assert rc != 0
+    err = capsys.readouterr().err
+    assert "Error" in err

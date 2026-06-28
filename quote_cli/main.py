@@ -11,6 +11,11 @@ from typing import Any
 from quote_engine import storage as _storage
 from quote_engine.calculator import calculate_quote
 from quote_engine.exporters.holded import export_holded_payload
+from quote_engine.exporters.internal_report import (
+    build_internal_report,
+    build_internal_report_html,
+    save_internal_report_html,
+)
 from quote_engine.models import QuoteSnapshot
 
 
@@ -238,6 +243,51 @@ def cmd_export_holded(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_report(args: argparse.Namespace) -> int:
+    try:
+        doc = _storage.load_quote(args.quote_id)
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
+    snap = QuoteSnapshot.model_validate(doc["snapshot"])
+    meta = doc.get("metadata", {})
+
+    if args.output:
+        try:
+            path = save_internal_report_html(snap, args.output, metadata=meta)
+        except Exception as exc:
+            print(f"Error al guardar informe: {exc}", file=sys.stderr)
+            return 1
+        print(f"Informe interno generado: {path}")
+        if args.open:
+            import webbrowser
+            webbrowser.open(Path(path).resolve().as_uri())
+        return 0
+
+    # Sin --output: resumen en texto
+    report = build_internal_report(snap, metadata=meta)
+    t = report["totals"]
+    pct = t["gross_profit_percent"]
+    pct_str = f"{pct:.1f}%" if pct is not None else "N/A"
+
+    print(f"Presupuesto:    {meta.get('id', args.quote_id)}")
+    print(f"Cliente:        {report['header'].get('client_name') or '(sin cliente)'}")
+    print(f"Estado:         {meta.get('status', '?')}")
+    print(f"Coste total:    {t['cost_subtotal']:.2f} €")
+    print(f"Venta sin IGIC: {t['sale_subtotal']:.2f} €")
+    print(f"Total cliente:  {t['final_total']:.2f} €")
+    print(f"Beneficio:      {t['gross_profit']:.2f} € ({pct_str})")
+    print(f"Proveedores:    {len(report['supplier_summary'])}")
+    print(f"Líneas:         {len(report['lines'])}")
+    if report["problems"]:
+        print(f"Problemas:      {len(report['problems'])}")
+        for p in report["problems"]:
+            print(f"  ⚠ {p['line']} — {p['issue']}")
+    print("(Usa --output <archivo.html> para generar el informe HTML completo)")
+    return 0
+
+
 # ---------------------------------------------------------------------------
 # Parser
 # ---------------------------------------------------------------------------
@@ -299,6 +349,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_exp.add_argument("--output", help="Ruta del archivo de salida (opcional)")
     p_exp.add_argument("--json", dest="output_json", action="store_true", help="Salida JSON en pantalla")
     p_exp.set_defaults(func=cmd_export_holded)
+
+    # report
+    p_rep = sub.add_parser("report", help="Generar informe interno HTML")
+    p_rep.add_argument("quote_id", help="ID del presupuesto")
+    p_rep.add_argument("--output", help="Ruta del archivo HTML de salida")
+    p_rep.add_argument("--open", dest="open", action="store_true", help="Abrir en navegador tras generar")
+    p_rep.set_defaults(func=cmd_report)
 
     return parser
 

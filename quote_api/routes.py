@@ -11,6 +11,8 @@ from quote_engine.calculator import calculate_quote
 from quote_engine.commands import apply_command, apply_commands
 from quote_engine.exporters.holded import export_holded_payload
 from quote_engine.exporters.internal_report import (
+    build_internal_report,
+    build_internal_report_html,
     export_internal_report_dict,
     export_internal_report_html,
 )
@@ -229,3 +231,28 @@ def storage_archive_quote(quote_id: str) -> dict:
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     return {"quote_id": quote_id, "status": doc["metadata"]["status"]}
+
+
+@router.get("/storage/quotes/{quote_id}/report")
+def storage_report_dict(quote_id: str) -> dict:
+    try:
+        doc = storage.load_quote(quote_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    snap = QuoteSnapshot.model_validate(doc["snapshot"])
+    return build_internal_report(snap, metadata=doc.get("metadata"))
+
+
+@router.get("/storage/quotes/{quote_id}/report/html")
+def storage_report_html(quote_id: str) -> dict:
+    try:
+        doc = storage.load_quote(quote_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    snap = QuoteSnapshot.model_validate(doc["snapshot"])
+    html = build_internal_report_html(snap, metadata=doc.get("metadata"))
+    return {"html": html}

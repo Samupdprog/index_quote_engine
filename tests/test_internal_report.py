@@ -1,0 +1,287 @@
+"""Tests del informe interno HTML (v0.6)."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+from quote_engine.exporters.internal_report import (
+    build_internal_report,
+    build_internal_report_html,
+    export_internal_report_dict,
+    save_internal_report_html,
+)
+from quote_engine.calculator import calculate_quote
+from quote_engine.models import QuoteSnapshot
+
+
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
+
+@pytest.fixture()
+def snap_two_suppliers() -> QuoteSnapshot:
+    return QuoteSnapshot.model_validate({
+        "header": {
+            "global_margin": 35,
+            "tax": 7,
+            "client_name": "Empresa Test S.L.",
+            "include_tax": False,
+            "internal_notes": "Nota interna de prueba",
+        },
+        "lines": [
+            {
+                "id": "l1",
+                "type": "material",
+                "description": "Split Daikin 1x1",
+                "quantity": 1,
+                "unit": "ud",
+                "supplier": "Frigicoll",
+                "supplier_gross_unit_price": 500.0,
+                "supplier_discounts": [40, 5],
+                "sale_mode": "margin",
+                "margin": 35,
+                "pass_supplier_discount_to_client": False,
+            },
+            {
+                "id": "l2",
+                "type": "material",
+                "description": "Bomba de calor Carrier",
+                "quantity": 1,
+                "unit": "ud",
+                "supplier": "Carrier",
+                "supplier_gross_unit_price": 1200.0,
+                "supplier_discounts": [32],
+                "sale_mode": "margin",
+                "margin": 35,
+                "pass_supplier_discount_to_client": False,
+            },
+            {
+                "id": "l3",
+                "type": "labor",
+                "description": "Mano de obra",
+                "quantity": 8,
+                "unit": "h",
+                "sale_mode": "fixed_unit",
+                "sale_value": 45.0,
+            },
+        ],
+    })
+
+
+@pytest.fixture()
+def snap_with_problems() -> QuoteSnapshot:
+    """Snapshot con una línea de coste 0 y otra con beneficio negativo."""
+    return QuoteSnapshot.model_validate({
+        "header": {
+            "global_margin": 35,
+            "tax": 7,
+            "client_name": "Test Problemas",
+            "include_tax": False,
+        },
+        "lines": [
+            {
+                "id": "l1",
+                "type": "material",
+                "description": "Línea sin coste",
+                "quantity": 1,
+                "unit": "ud",
+                "sale_mode": "fixed_unit",
+                "sale_value": 50.0,
+            },
+            {
+                "id": "l2",
+                "type": "material",
+                "description": "Línea negativa",
+                "quantity": 1,
+                "unit": "ud",
+                "supplier": "Proveedor X",
+                "supplier_gross_unit_price": 200.0,
+                "supplier_discounts": [],
+                "sale_mode": "fixed_total",
+                "sale_value": 100.0,
+            },
+        ],
+    })
+
+
+# ---------------------------------------------------------------------------
+# 1. Genera informe interno dict
+# ---------------------------------------------------------------------------
+
+def test_build_internal_report_dict(snap_two_suppliers: QuoteSnapshot) -> None:
+    report = build_internal_report(snap_two_suppliers)
+    assert "header" in report
+    assert "totals" in report
+    assert "lines" in report
+    assert "supplier_summary" in report
+    assert "problems" in report
+    assert "warnings" in report
+
+
+# ---------------------------------------------------------------------------
+# 2. Genera HTML válido
+# ---------------------------------------------------------------------------
+
+def test_build_internal_report_html_is_valid(snap_two_suppliers: QuoteSnapshot) -> None:
+    html = build_internal_report_html(snap_two_suppliers)
+    assert html.strip().startswith("<!DOCTYPE html>")
+    assert "</html>" in html
+
+
+# ---------------------------------------------------------------------------
+# 3. HTML contiene cliente
+# ---------------------------------------------------------------------------
+
+def test_html_contains_client(snap_two_suppliers: QuoteSnapshot) -> None:
+    html = build_internal_report_html(snap_two_suppliers)
+    assert "Empresa Test S.L." in html
+
+
+# ---------------------------------------------------------------------------
+# 4. HTML contiene total cliente
+# ---------------------------------------------------------------------------
+
+def test_html_contains_total_cliente(snap_two_suppliers: QuoteSnapshot) -> None:
+    html = build_internal_report_html(snap_two_suppliers)
+    assert "Total cliente" in html
+
+
+# ---------------------------------------------------------------------------
+# 5. HTML contiene beneficio
+# ---------------------------------------------------------------------------
+
+def test_html_contains_beneficio(snap_two_suppliers: QuoteSnapshot) -> None:
+    html = build_internal_report_html(snap_two_suppliers)
+    assert "Beneficio" in html
+
+
+# ---------------------------------------------------------------------------
+# 6. HTML contiene resumen por proveedor
+# ---------------------------------------------------------------------------
+
+def test_html_contains_supplier_summary(snap_two_suppliers: QuoteSnapshot) -> None:
+    html = build_internal_report_html(snap_two_suppliers)
+    assert "Frigicoll" in html
+    assert "Carrier" in html
+    assert "Resumen por proveedor" in html
+
+
+# ---------------------------------------------------------------------------
+# 7. HTML contiene tabla de líneas
+# ---------------------------------------------------------------------------
+
+def test_html_contains_line_table(snap_two_suppliers: QuoteSnapshot) -> None:
+    html = build_internal_report_html(snap_two_suppliers)
+    assert "Split Daikin 1x1" in html
+    assert "Bomba de calor Carrier" in html
+    assert "Mano de obra" in html
+    assert "Líneas" in html
+
+
+# ---------------------------------------------------------------------------
+# 8. HTML contiene warnings si existen
+# ---------------------------------------------------------------------------
+
+def test_html_no_warnings_when_clean(snap_two_suppliers: QuoteSnapshot) -> None:
+    html = build_internal_report_html(snap_two_suppliers)
+    # Sin problemas no debe mostrar la sección de problemas detectados
+    report = build_internal_report(snap_two_suppliers)
+    if not report["problems"] and not report["warnings"]:
+        assert "Problemas detectados" not in html
+
+
+def test_html_shows_warnings_when_present(snap_with_problems: QuoteSnapshot) -> None:
+    html = build_internal_report_html(snap_with_problems)
+    # Debe haber alguna señal de problema (coste 0 o beneficio negativo)
+    assert "coste 0" in html or "negativo" in html or "⚠" in html
+
+
+# ---------------------------------------------------------------------------
+# 9. Detecta línea con coste 0
+# ---------------------------------------------------------------------------
+
+def test_detects_zero_cost_line(snap_with_problems: QuoteSnapshot) -> None:
+    report = build_internal_report(snap_with_problems)
+    issues = [p["issue"] for p in report["problems"]]
+    assert any("coste 0" in i for i in issues)
+
+
+# ---------------------------------------------------------------------------
+# 10. Detecta línea con beneficio negativo
+# ---------------------------------------------------------------------------
+
+def test_detects_negative_profit_line(snap_with_problems: QuoteSnapshot) -> None:
+    report = build_internal_report(snap_with_problems)
+    issues = [p["issue"] for p in report["problems"]]
+    assert any("negativo" in i for i in issues)
+
+
+# ---------------------------------------------------------------------------
+# 11. Resumen por proveedor agrupa correctamente
+# ---------------------------------------------------------------------------
+
+def test_supplier_summary_groups(snap_two_suppliers: QuoteSnapshot) -> None:
+    report = build_internal_report(snap_two_suppliers)
+    summary = report["supplier_summary"]
+    names = [s["supplier"] for s in summary]
+    assert "Frigicoll" in names
+    assert "Carrier" in names
+    # Mano de obra sin proveedor -> "(sin proveedor)"
+    assert "(sin proveedor)" in names
+    for s in summary:
+        assert s["line_count"] >= 1
+        assert "cost_total" in s
+        assert "profit" in s
+
+
+# ---------------------------------------------------------------------------
+# 12. save_internal_report_html crea archivo
+# ---------------------------------------------------------------------------
+
+def test_save_internal_report_html(snap_two_suppliers: QuoteSnapshot, tmp_path: Path) -> None:
+    out = tmp_path / "report.html"
+    result = save_internal_report_html(snap_two_suppliers, out)
+    assert Path(result).exists()
+    content = Path(result).read_text(encoding="utf-8")
+    assert "<!DOCTYPE html>" in content
+    assert "Empresa Test S.L." in content
+
+
+# ---------------------------------------------------------------------------
+# 13. HTML incluye notas internas si existen
+# ---------------------------------------------------------------------------
+
+def test_html_includes_internal_notes(snap_two_suppliers: QuoteSnapshot) -> None:
+    html = build_internal_report_html(snap_two_suppliers)
+    assert "Nota interna de prueba" in html
+
+
+# ---------------------------------------------------------------------------
+# 14. HTML incluye metadata si se pasa
+# ---------------------------------------------------------------------------
+
+def test_html_includes_metadata() -> None:
+    snap = QuoteSnapshot.model_validate({
+        "header": {"global_margin": 35, "tax": 7, "include_tax": False, "client_name": "X"},
+        "lines": [],
+    })
+    meta = {"id": "PRE-2026-0001", "status": "draft", "tags": ["split"]}
+    html = build_internal_report_html(snap, metadata=meta)
+    assert "PRE-2026-0001" in html
+    assert "draft" in html
+
+
+# ---------------------------------------------------------------------------
+# 15. Compatibilidad: export_internal_report_dict sigue funcionando
+# ---------------------------------------------------------------------------
+
+def test_export_internal_report_dict_compat(snap_two_suppliers: QuoteSnapshot) -> None:
+    calculated = calculate_quote(snap_two_suppliers)
+    report = export_internal_report_dict(snap_two_suppliers, calculated)
+    assert "header" in report
+    assert "totals" in report
+    assert "lines" in report
+    assert len(report["lines"]) == 3

@@ -1,4 +1,4 @@
-# index_quote_engine · v0.4
+# index_quote_engine · v0.5
 
 Motor de generación y cálculo de presupuestos para **Index Clima**.
 
@@ -14,6 +14,8 @@ Motor de generación y cálculo de presupuestos para **Index Clima**.
 - Edita el presupuesto mediante comandos inmutables.
 - Exporta un payload JSON compatible con Holded (sin enviar nada todavía).
 - API REST con FastAPI · documentación automática en `/docs`.
+- CLI para operar sin Swagger: `python -m quote_cli` o `index-quote`.
+- Guarda y recupera presupuestos como archivos JSON locales (`data/quotes/`).
 
 ## Qué NO hace todavía
 
@@ -52,7 +54,49 @@ pip install -e ".[dev]"
 .venv/bin/pytest -v              # Linux / Mac
 ```
 
-Resultado esperado: **161 passed** (v0.4).
+Resultado esperado: **176 passed** (v0.5).
+
+---
+
+## Uso por CLI
+
+El programa puede usarse desde terminal sin Swagger ni servidor.
+
+```bash
+# Guardar un presupuesto desde JSON
+python -m quote_cli save data/examples/storage_quote_example.json --created-by Samuel --source cli
+
+# Listar presupuestos guardados
+python -m quote_cli list
+python -m quote_cli list --status draft
+python -m quote_cli list --client "Comunidad" --limit 5
+
+# Ver detalle de un presupuesto
+python -m quote_cli show PRE-2026-0001
+python -m quote_cli show PRE-2026-0001 --json
+
+# Calcular totales
+python -m quote_cli calculate PRE-2026-0001
+python -m quote_cli calculate PRE-2026-0001 --json
+
+# Duplicar
+python -m quote_cli duplicate PRE-2026-0001
+python -m quote_cli duplicate PRE-2026-0001 --new-id PRE-2026-0002
+
+# Archivar (sin borrar)
+python -m quote_cli archive PRE-2026-0001
+
+# Exportar payload Holded
+python -m quote_cli export-holded PRE-2026-0001
+python -m quote_cli export-holded PRE-2026-0001 --output data/exports/PRE-2026-0001-holded.json
+```
+
+Si el paquete está instalado con `pip install -e .`, también está disponible como:
+
+```bash
+index-quote list
+index-quote show PRE-2026-0001
+```
 
 ---
 
@@ -342,14 +386,18 @@ index_quote_engine/
 │   ├── commands.py        — apply_command() / apply_commands()
 │   ├── validators.py      — validaciones compartidas
 │   ├── document_rules.py  — reglas documentales obligatorias
-│   ├── storage.py         — guardado/carga local de presupuestos (v0.4)
+│   ├── storage.py         — guardado/carga local de presupuestos
 │   └── exporters/
 │       ├── holded.py
 │       └── internal_report.py
 ├── quote_api/             — FastAPI (sin lógica de negocio en endpoints)
 │   ├── main.py
 │   └── routes.py
-├── tests/                 — 159 tests (pytest)
+├── quote_cli/             — CLI (argparse, sin dependencias extra)
+│   ├── __init__.py
+│   ├── __main__.py        — permite `python -m quote_cli`
+│   └── main.py            — list, show, calculate, save, duplicate, archive, export-holded
+├── tests/                 — 176 tests (pytest)
 ├── data/
 │   ├── quotes/            — presupuestos guardados (PRE-YYYY-NNNN.json)
 │   ├── examples/          — JSONs de ejemplo

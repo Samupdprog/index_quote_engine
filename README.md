@@ -1,4 +1,4 @@
-# index_quote_engine · v0.6
+# index_quote_engine · v0.6.2
 
 Motor de generación y cálculo de presupuestos para **Index Clima**.
 
@@ -16,7 +16,7 @@ Motor de generación y cálculo de presupuestos para **Index Clima**.
 - API REST con FastAPI · documentación automática en `/docs`.
 - CLI para operar sin Swagger: `python -m quote_cli` o `index-quote`.
 - Guarda y recupera presupuestos como archivos JSON locales (`data/quotes/`).
-- Informe interno HTML: resumen por proveedor, detección de problemas, tabla de líneas.
+- Informe interno HTML: semáforo visual (OK/REVISAR/PELIGRO), tarjetas de KPIs, resumen rápido, recomendaciones de revisión, tabla de líneas.
 
 ## Qué NO hace todavía
 
@@ -55,7 +55,7 @@ pip install -e ".[dev]"
 .venv/bin/pytest -v              # Linux / Mac
 ```
 
-Resultado esperado: **195 passed** (v0.6).
+Resultado esperado: **217 passed** (v0.6.2).
 
 ---
 
@@ -73,13 +73,16 @@ python -m quote_cli report PRE-2026-0001
 
 El informe incluye:
 
+- **Semáforo** `OK` / `REVISAR` / `PELIGRO` con motivo
+- **Tarjetas KPI**: Total cliente, Coste total, Beneficio, % Beneficio, Problemas, Warnings
+- **Resumen rápido**: 4-6 frases en lenguaje natural sobre el presupuesto
+- **Qué revisar**: lista concreta de acciones si hay problemas
 - Metadata del presupuesto (ID, estado, fechas, tipo, tags)
-- Totales (coste, venta, IGIC, total cliente, beneficio, %)
+- Totales detallados (coste, venta, IGIC, total cliente, beneficio, %)
 - **Resumen por proveedor**: coste total, venta, beneficio, % y número de líneas
 - **Tabla de líneas** completa con coste unitario/total, venta unitario/total, IGIC, beneficio
-- **Detección de problemas**: coste 0, beneficio negativo, margen bajo, material sin proveedor
+- Color coding: rojo para beneficio negativo, amarillo/naranja para coste 0, margen bajo
 - Notas internas
-- Color coding: rojo para beneficio negativo, amarillo para coste 0 o margen bajo
 
 Los archivos HTML son standalone, sin CDN ni dependencias externas.
 

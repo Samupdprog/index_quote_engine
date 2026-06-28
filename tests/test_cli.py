@@ -283,3 +283,45 @@ def test_report_nonexistent_quote(capsys: pytest.CaptureFixture) -> None:
     assert rc != 0
     err = capsys.readouterr().err
     assert "Error" in err
+
+
+# ---------------------------------------------------------------------------
+# CLI report v0.6.2 — semáforo y resumen rápido
+# ---------------------------------------------------------------------------
+
+def test_report_text_shows_semaforo(saved_quote_id: str, capsys: pytest.CaptureFixture) -> None:
+    rc = main(["report", saved_quote_id])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "Semáforo:" in out
+    assert any(label in out for label in ("OK", "REVISAR", "PELIGRO"))
+
+
+def test_report_text_shows_resumen_rapido(saved_quote_id: str, capsys: pytest.CaptureFixture) -> None:
+    rc = main(["report", saved_quote_id])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "Resumen rápido:" in out
+
+
+def test_report_html_contains_badge(
+    saved_quote_id: str, tmp_path: Path, capsys: pytest.CaptureFixture
+) -> None:
+    out_file = tmp_path / "rep.html"
+    rc = main(["report", saved_quote_id, "--output", str(out_file)])
+    assert rc == 0
+    content = out_file.read_text(encoding="utf-8")
+    assert "status-badge" in content
+    assert any(label in content for label in ("OK", "REVISAR", "PELIGRO"))
+
+
+def test_report_html_contains_cards(
+    saved_quote_id: str, tmp_path: Path, capsys: pytest.CaptureFixture
+) -> None:
+    out_file = tmp_path / "rep.html"
+    rc = main(["report", saved_quote_id, "--output", str(out_file)])
+    assert rc == 0
+    content = out_file.read_text(encoding="utf-8")
+    assert "cards" in content
+    assert "Resumen rápido" in content
+    assert "Qué revisar" in content

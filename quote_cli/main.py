@@ -270,20 +270,41 @@ def cmd_report(args: argparse.Namespace) -> int:
     t = report["totals"]
     pct = t["gross_profit_percent"]
     pct_str = f"{pct:.1f}%" if pct is not None else "N/A"
+    rs = report["report_status"]
 
     print(f"Presupuesto:    {meta.get('id', args.quote_id)}")
     print(f"Cliente:        {report['header'].get('client_name') or '(sin cliente)'}")
     print(f"Estado:         {meta.get('status', '?')}")
-    print(f"Coste total:    {t['cost_subtotal']:.2f} €")
-    print(f"Venta sin IGIC: {t['sale_subtotal']:.2f} €")
+    print(f"Semáforo:       [{rs['label']}] {rs['reason']}")
+    print()
     print(f"Total cliente:  {t['final_total']:.2f} €")
+    print(f"Coste total:    {t['cost_subtotal']:.2f} €")
     print(f"Beneficio:      {t['gross_profit']:.2f} € ({pct_str})")
     print(f"Proveedores:    {len(report['supplier_summary'])}")
     print(f"Líneas:         {len(report['lines'])}")
+    print()
+
+    if report["human_summary"]:
+        print("Resumen rápido:")
+        for s in report["human_summary"]:
+            print(f"  · {s}")
+        print()
+
+    if report["review_recommendations"]:
+        print("Qué revisar:")
+        for r in report["review_recommendations"]:
+            print(f"  ! {r}")
+        print()
+    elif not report["problems"] and not report["warnings"]:
+        print("Qué revisar: ninguna revisión pendiente.")
+        print()
+
     if report["problems"]:
-        print(f"Problemas:      {len(report['problems'])}")
+        print(f"Problemas ({len(report['problems'])}):")
         for p in report["problems"]:
             print(f"  ⚠ {p['line']} — {p['issue']}")
+        print()
+
     print("(Usa --output <archivo.html> para generar el informe HTML completo)")
     return 0
 

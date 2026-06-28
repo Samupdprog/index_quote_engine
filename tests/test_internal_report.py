@@ -11,6 +11,7 @@ from quote_engine.exporters.internal_report import (
     build_internal_report,
     build_internal_report_html,
     export_internal_report_dict,
+    get_report_status,
     save_internal_report_html,
 )
 from quote_engine.calculator import calculate_quote
@@ -371,3 +372,135 @@ def test_zero_cost_still_detected_as_problem() -> None:
     report = build_internal_report(snap)
     issues = [p["issue"] for p in report["problems"]]
     assert any("coste 0" in i for i in issues)
+
+
+# ---------------------------------------------------------------------------
+# v0.6.2 — semáforo, resumen humano y recomendaciones
+# ---------------------------------------------------------------------------
+
+def test_report_ok_when_no_problems() -> None:
+    """Presupuesto sin problemas → semáforo OK."""
+    snap = QuoteSnapshot.model_validate({
+        "header": {"global_margin": 35, "tax": 7, "include_tax": False, "client_name": "Clean"},
+        "lines": [
+            {
+                "id": "l1", "type": "material", "description": "Split limpio",
+                "quantity": 1, "unit": "ud",
+                "supplier": "Frigicoll",
+                "supplier_gross_unit_price": 500.0,
+                "supplier_discounts": [40],
+                "sale_mode": "margin", "margin": 35,
+                "pass_supplier_discount_to_client": False,
+            },
+        ],
+    })
+    report = build_internal_report(snap)
+    rs = report["report_status"]
+    assert rs["status"] == "ok"
+    assert rs["label"] == "OK"
+
+
+def test_report_danger_negative_profit() -> None:
+    """Presupuesto con beneficio total negativo → semáforo PELIGRO."""
+    snap = QuoteSnapshot.model_validate({
+        "header": {"global_margin": 35, "tax": 7, "include_tax": False},
+        "lines": [
+            {
+                "id": "l1", "type": "material", "description": "Línea negativa",
+                "quantity": 1, "unit": "ud",
+                "supplier": "X",
+                "supplier_gross_unit_price": 300.0,
+                "supplier_discounts": [],
+                "sale_mode": "fixed_total",
+                "sale_value": 100.0,
+            },
+        ],
+    })
+    report = build_internal_report(snap)
+    rs = report["report_status"]
+    assert rs["status"] == "danger"
+    assert rs["label"] == "PELIGRO"
+
+
+def test_report_review_when_zero_cost() -> None:
+    """Presupuesto con coste 0 (y sin beneficio negativo) → semáforo REVISAR."""
+    snap = QuoteSnapshot.model_validate({
+        "header": {"global_margin": 35, "tax": 7, "include_tax": False},
+        "lines": [
+            {
+                "id": "l1", "type": "material", "description": "Sin coste",
+                "quantity": 1, "unit": "ud",
+                "sale_mode": "fixed_unit", "sale_value": 50.0,
+            },
+        ],
+    })
+    report = build_internal_report(snap)
+    rs = report["report_status"]
+    assert rs["status"] == "review"
+    assert rs["label"] == "REVISAR"
+
+
+def test_get_report_status_standalone(snap_with_problems: QuoteSnapshot) -> None:
+    """get_report_status funciona con un report dict."""
+    report = build_internal_report(snap_with_problems)
+    rs = get_report_status(report)
+    assert rs["status"] in ("ok", "review", "danger")
+    assert "label" in rs
+    assert "reason" in rs
+
+
+def test_build_internal_report_has_new_fields(snap_two_suppliers: QuoteSnapshot) -> None:
+    """build_internal_report devuelve los tres nuevos campos."""
+    report = build_internal_report(snap_two_suppliers)
+    assert "report_status" in report
+    assert "human_summary" in report
+    assert "review_recommendations" in report
+    assert isinstance(report["human_summary"], list)
+    assert isinstance(report["review_recommendations"], list)
+
+
+def test_human_summary_contains_total(snap_two_suppliers: QuoteSnapshot) -> None:
+    """El resumen humano menciona el total cliente."""
+    report = build_internal_report(snap_two_suppliers)
+    joined = " ".join(report["human_summary"])
+    assert "total cliente" in joined.lower() or "€" in joined
+
+
+def test_review_recommendations_empty_when_ok(snap_two_suppliers: QuoteSnapshot) -> None:
+    """Sin problemas, review_recommendations está vacío."""
+    report = build_internal_report(snap_two_suppliers)
+    if report["report_status"]["status"] == "ok":
+        assert report["review_recommendations"] == []
+
+
+def test_review_recommendations_nonempty_with_problems(snap_with_problems: QuoteSnapshot) -> None:
+    """Con problemas detectados, review_recommendations no está vacío."""
+    report = build_internal_report(snap_with_problems)
+    assert len(report["review_recommendations"]) > 0
+
+
+def test_html_contains_status_badge(snap_two_suppliers: QuoteSnapshot) -> None:
+    """El HTML contiene el badge de semáforo."""
+    html = build_internal_report_html(snap_two_suppliers)
+    assert "status-badge" in html
+    assert any(label in html for label in ("OK", "REVISAR", "PELIGRO"))
+
+
+def test_html_contains_cards(snap_two_suppliers: QuoteSnapshot) -> None:
+    """El HTML contiene la sección de tarjetas."""
+    html = build_internal_report_html(snap_two_suppliers)
+    assert "cards" in html
+    assert "card-label" in html
+    assert "card-value" in html
+
+
+def test_html_contains_resumen_rapido(snap_two_suppliers: QuoteSnapshot) -> None:
+    """El HTML contiene la sección Resumen rápido."""
+    html = build_internal_report_html(snap_two_suppliers)
+    assert "Resumen rápido" in html
+
+
+def test_html_contains_que_revisar(snap_two_suppliers: QuoteSnapshot) -> None:
+    """El HTML contiene la sección Qué revisar."""
+    html = build_internal_report_html(snap_two_suppliers)
+    assert "Qué revisar" in html

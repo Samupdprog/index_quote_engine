@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 
 from .eon_routes import eon_router
 from .routes import router
+from .workflow_routes import workflow_router
 
 
 class UTF8JSONResponse(JSONResponse):
@@ -36,3 +37,4 @@ app = FastAPI(
 
 app.include_router(router)
 app.include_router(eon_router)
+app.include_router(workflow_router)

@@ -1,4 +1,4 @@
-# index_quote_engine · v0.8
+# index_quote_engine · v0.9
 
 Motor de generación y cálculo de presupuestos para **Index Clima**.
 
@@ -19,6 +19,7 @@ Motor de generación y cálculo de presupuestos para **Index Clima**.
 - Informe interno HTML: semáforo visual (OK/REVISAR/PELIGRO), tarjetas de KPIs, resumen rápido, recomendaciones de revisión, tabla de líneas.
 - **Búsqueda local avanzada**: busca por cliente, proveedor, texto libre, estado, tipo, tags, beneficio, total, warnings y problemas — sin base de datos.
 - **Herramientas para EON**: fachada segura para que EON opere el sistema sin tocar JSON directamente.
+- **Flujo de trabajo real**: convierte un JSON de entrada en presupuesto guardado, calculado, con informe HTML y payload Holded en un solo comando.
 
 ## Qué NO hace todavía
 
@@ -57,7 +58,7 @@ pip install -e ".[dev]"
 .venv/bin/pytest -v              # Linux / Mac
 ```
 
-Resultado esperado: **300 passed** (v0.8).
+Resultado esperado: **319 passed** (v0.9).
 
 ---
 
@@ -336,6 +337,57 @@ Cuando está activo, la base de venta es el **PVP bruto del proveedor** (no el c
 | `supplier_discounts` | `descuentosProveedor`, `descuentos`, `dto` |
 | `margin` | `margen` |
 | `tax` | `igic` |
+
+---
+
+## Flujo de trabajo real
+
+A partir de v0.9 existe un flujo completo que convierte un JSON de entrada en un presupuesto guardado, calculado, revisado, con informe interno HTML y payload Holded exportado — en un solo comando.
+
+No envía nada a Holded. No genera PDF final. No usa base de datos. Deja archivos en `data/quotes/`, `data/reports/` y `data/exports/`.
+
+```bash
+python -m quote_cli workflow data/examples/storage_quote_example.json \
+  --id PRE-2026-0001 \
+  --created-by EON \
+  --project-type climatizacion \
+  --tag split \
+  --tag vivienda
+```
+
+Salida:
+```
+Workflow completado: PRE-2026-0001
+
+Estado:         [REVISAR]
+Cliente:        Comunidad de Propietarios Las Mimosas
+Total cliente:  720.36 €
+Beneficio:      359.73 € (114.8%)
+Problemas:      1
+Warnings:       2
+
+Informe HTML:   data/reports/PRE-2026-0001-report.html
+Payload Holded: data/exports/PRE-2026-0001-holded.json
+
+Qué revisar:
+  ! Revisar líneas con coste 0 antes de enviar.
+```
+
+Opciones:
+```bash
+--no-report          # No generar informe HTML
+--no-holded          # No exportar payload Holded
+--report-output <p>  # Ruta personalizada del informe
+--holded-output <p>  # Ruta personalizada del payload
+--json               # Salida JSON completa
+```
+
+Endpoint API equivalente:
+```
+POST /workflow/quote
+```
+
+Body: `input_path`, `quote_id`, `created_by`, `source`, `status`, `project_type`, `tags`, `generate_report`, `export_holded`, `report_output_path`, `holded_output_path`.
 
 ---
 

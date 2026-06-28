@@ -18,6 +18,7 @@ from quote_engine.exporters.internal_report import (
 )
 from quote_engine.models import QuoteSnapshot
 from quote_engine.eon_tools import eon_summarize_quote, list_eon_tools
+from quote_engine.workflow import run_quote_workflow
 from quote_engine.search import find_recent_quotes, search_quotes, summarize_search_results
 
 
@@ -242,6 +243,57 @@ def cmd_export_holded(args: argparse.Namespace) -> int:
     print(f"Subtotal:    {t.get('subtotal', 0):.2f} €")
     print(f"IGIC:        {t.get('tax', 0):.2f} €")
     print(f"Total:       {t.get('total', 0):.2f} €")
+    return 0
+
+
+def cmd_workflow(args: argparse.Namespace) -> int:
+    result = run_quote_workflow(
+        input_path=args.input_file,
+        quote_id=args.id,
+        created_by=args.created_by,
+        source=args.source,
+        status=args.status,
+        project_type=args.project_type,
+        tags=args.tag or [],
+        generate_report=not args.no_report,
+        export_holded=not args.no_holded,
+        report_output_path=args.report_output,
+        holded_output_path=args.holded_output,
+    )
+
+    if args.output_json:
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+        return 0 if result["ok"] else 1
+
+    if not result["ok"]:
+        print(f"Error: {result['error']}", file=sys.stderr)
+        return 1
+
+    qid = result["quote_id"]
+    s = result["summary"]
+    pct = s.get("gross_profit_percent")
+    pct_str = f"{pct:.1f}%" if pct is not None else "N/A"
+
+    print(f"Workflow completado: {qid}")
+    print()
+    print(f"Estado:         [{s.get('report_label', '?')}]")
+    print(f"Cliente:        {s.get('client_name') or '(sin cliente)'}")
+    print(f"Total cliente:  {s.get('final_total', 0):.2f} €")
+    print(f"Beneficio:      {s.get('gross_profit', 0):.2f} € ({pct_str})")
+    print(f"Problemas:      {s.get('problems_count', 0)}")
+    print(f"Warnings:       {s.get('warnings_count', 0)}")
+
+    if result.get("report_path"):
+        print(f"\nInforme HTML:   {result['report_path']}")
+    if result.get("holded_path"):
+        print(f"Payload Holded: {result['holded_path']}")
+
+    recs = result.get("review_recommendations", [])
+    if recs:
+        print("\nQué revisar:")
+        for r in recs:
+            print(f"  ! {r}")
+
     return 0
 
 
@@ -490,6 +542,22 @@ def build_parser() -> argparse.ArgumentParser:
     p_exp.add_argument("--output", help="Ruta del archivo de salida (opcional)")
     p_exp.add_argument("--json", dest="output_json", action="store_true", help="Salida JSON en pantalla")
     p_exp.set_defaults(func=cmd_export_holded)
+
+    # workflow
+    p_wf = sub.add_parser("workflow", help="Flujo completo: importar, guardar, calcular, informar")
+    p_wf.add_argument("input_file", help="Ruta al JSON de entrada (snapshot o doc completo)")
+    p_wf.add_argument("--id", help="ID explícito del presupuesto (opcional)")
+    p_wf.add_argument("--created-by", dest="created_by", default="EON", help="Autor")
+    p_wf.add_argument("--source", default="workflow", help="Fuente (default: workflow)")
+    p_wf.add_argument("--status", default="draft", help="Estado inicial (default: draft)")
+    p_wf.add_argument("--project-type", dest="project_type", help="Tipo de proyecto")
+    p_wf.add_argument("--tag", action="append", dest="tag", help="Tag (puede repetirse)")
+    p_wf.add_argument("--no-report", dest="no_report", action="store_true", help="No generar informe HTML")
+    p_wf.add_argument("--no-holded", dest="no_holded", action="store_true", help="No exportar payload Holded")
+    p_wf.add_argument("--report-output", dest="report_output", help="Ruta del informe HTML")
+    p_wf.add_argument("--holded-output", dest="holded_output", help="Ruta del payload Holded")
+    p_wf.add_argument("--json", dest="output_json", action="store_true", help="Salida JSON")
+    p_wf.set_defaults(func=cmd_workflow)
 
     # eon-tools
     p_eon = sub.add_parser("eon-tools", help="Listar herramientas disponibles para EON")

@@ -1,0 +1,50 @@
+{
+  "header": {
+    "client_name": "Cliente Conductos",
+    "tax": 7.0,
+    "global_margin": 35.0
+  },
+  "lines": [
+    {
+      "type": "material",
+      "description": "Cassette 4 vías 18000 BTU",
+      "quantity": 1.0,
+      "unit": "ud",
+      "supplier": "Airwell",
+      "supplier_net_unit_cost": 780.0,
+      "sale_mode": "margin"
+    },
+    {
+      "type": "material",
+      "description": "Tubería de cobre 3/8 - 5/8",
+      "quantity": 15.0,
+      "unit": "m",
+      "supplier_net_unit_cost": 3.50,
+      "sale_mode": "margin"
+    },
+    {
+      "type": "material",
+      "description": "Gas refrigerante nitrógeno",
+      "quantity": 1.0,
+      "unit": "ud",
+      "supplier_net_unit_cost": 45.0,
+      "sale_mode": "margin"
+    },
+    {
+      "type": "labor",
+      "description": "Mano de obra con soldadura de cobre",
+      "quantity": 1.0,
+      "unit": "ud",
+      "sale_mode": "fixed_unit",
+      "sale_value": 450.0
+    },
+    {
+      "type": "travel",
+      "description": "Desplazamiento 2 días",
+      "quantity": 2.0,
+      "unit": "día",
+      "sale_mode": "fixed_unit",
+      "sale_value": 30.0
+    }
+  ]
+}

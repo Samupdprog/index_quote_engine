@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: eon-index-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-eon_index_clima}
+      POSTGRES_USER: ${POSTGRES_USER:-eon}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-eon_dev_password}
+    ports:
+      - "${POSTGRES_PORT:-5435}:5432"
+    volumes:
+      - eon_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-eon} -d ${POSTGRES_DB:-eon_index_clima}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  eon_postgres_data:
+    name: eon_postgres_data

@@ -1,0 +1,25 @@
+{
+  "header": {
+    "client_name": "Cliente Mantenimiento",
+    "tax": 7.0,
+    "global_margin": 0.0
+  },
+  "lines": [
+    {
+      "type": "labor",
+      "description": "Mantenimiento preventivo anual",
+      "quantity": 1.0,
+      "unit": "ud",
+      "sale_mode": "fixed_unit",
+      "sale_value": 120.0
+    },
+    {
+      "type": "travel",
+      "description": "Desplazamiento",
+      "quantity": 1.0,
+      "unit": "ud",
+      "sale_mode": "fixed_unit",
+      "sale_value": 30.0
+    }
+  ]
+}

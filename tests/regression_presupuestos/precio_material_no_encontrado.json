@@ -1,0 +1,24 @@
+{
+  "header": {
+    "client_name": "Cliente Sin Precio",
+    "tax": 7.0,
+    "global_margin": 35.0
+  },
+  "lines": [
+    {
+      "type": "material",
+      "description": "Material sin precio en catálogo",
+      "quantity": 2.0,
+      "unit": "ud",
+      "sale_mode": "margin"
+    },
+    {
+      "type": "labor",
+      "description": "Mano de obra",
+      "quantity": 1.0,
+      "unit": "ud",
+      "sale_mode": "fixed_unit",
+      "sale_value": 150.0
+    }
+  ]
+}

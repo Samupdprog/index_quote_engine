@@ -1,0 +1,27 @@
+{
+  "header": {
+    "client_name": "Cliente Confianza Baja",
+    "tax": 7.0,
+    "global_margin": 35.0,
+    "internal_notes": "Precio de material pendiente de confirmar con proveedor"
+  },
+  "lines": [
+    {
+      "type": "material",
+      "description": "Compresor scroll repuesto",
+      "quantity": 1.0,
+      "unit": "ud",
+      "supplier_net_unit_cost": 380.0,
+      "notes": "REVISAR: precio estimado, confirmar con Frigicoll",
+      "sale_mode": "margin"
+    },
+    {
+      "type": "labor",
+      "description": "Sustitución compresor",
+      "quantity": 1.0,
+      "unit": "ud",
+      "sale_mode": "fixed_unit",
+      "sale_value": 350.0
+    }
+  ]
+}

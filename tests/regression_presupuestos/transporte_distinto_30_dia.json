@@ -1,0 +1,26 @@
+{
+  "header": {
+    "client_name": "Cliente Transporte Reducido",
+    "tax": 7.0,
+    "global_margin": 35.0
+  },
+  "lines": [
+    {
+      "type": "material",
+      "description": "Split 1x1",
+      "quantity": 1.0,
+      "unit": "ud",
+      "supplier_net_unit_cost": 650.0,
+      "sale_mode": "margin"
+    },
+    {
+      "type": "travel",
+      "description": "Desplazamiento reducido por cercanía",
+      "quantity": 1.0,
+      "unit": "ud",
+      "sale_mode": "fixed_unit",
+      "sale_value": 15.0,
+      "notes": "Reducido por cercanía — aprobado por Samuel"
+    }
+  ]
+}

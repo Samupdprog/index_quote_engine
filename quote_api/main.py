@@ -5,17 +5,16 @@ import json
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
+from .catalog_routes import catalog_router
+from .db_routes import db_router
 from .eon_routes import eon_router
+from .learning_routes import learning_router
 from .routes import router
 from .workflow_routes import workflow_router
 
 
 class UTF8JSONResponse(JSONResponse):
-    """JSONResponse con charset=utf-8 explícito en Content-Type.
-
-    PowerShell 5.1 no asume UTF-8 por defecto cuando el Content-Type
-    es 'application/json' sin charset, lo que causa mojibake en tildes.
-    """
+    """JSONResponse con charset=utf-8 explicito en Content-Type."""
     media_type = "application/json; charset=utf-8"
 
     def render(self, content: object) -> bytes:
@@ -38,3 +37,6 @@ app = FastAPI(
 app.include_router(router)
 app.include_router(eon_router)
 app.include_router(workflow_router)
+app.include_router(catalog_router)
+app.include_router(learning_router)
+app.include_router(db_router)

@@ -1,0 +1,34 @@
+{
+  "header": {
+    "client_name": "Cliente Interconexión",
+    "tax": 7.0,
+    "global_margin": 35.0
+  },
+  "lines": [
+    {
+      "type": "material",
+      "description": "Split 1x1 con interconexión instalada",
+      "quantity": 1.0,
+      "unit": "ud",
+      "supplier_net_unit_cost": 950.0,
+      "notes": "Precio incluye kit de instalación",
+      "sale_mode": "margin"
+    },
+    {
+      "type": "labor",
+      "description": "Mano de obra puesta en marcha",
+      "quantity": 1.0,
+      "unit": "ud",
+      "sale_mode": "fixed_unit",
+      "sale_value": 120.0
+    },
+    {
+      "type": "travel",
+      "description": "Desplazamiento",
+      "quantity": 1.0,
+      "unit": "ud",
+      "sale_mode": "fixed_unit",
+      "sale_value": 30.0
+    }
+  ]
+}

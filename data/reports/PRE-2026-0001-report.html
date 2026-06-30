@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Informe Interno — PRE-2026-0001</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: sans-serif; font-size: 13px; padding: 24px; color: #222;
+            max-width: 1200px; margin: 0 auto; }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    h2 { font-size: 15px; margin: 28px 0 10px; border-bottom: 2px solid #e0e0e0;
+          padding-bottom: 4px; color: #333; }
+    h3 { font-size: 13px; margin: 8px 0 6px; }
+    p { margin: 4px 0; }
+    a { color: inherit; }
+
+    /* Cabecera */
+    .header-block { margin-bottom: 20px; }
+    .stamp { color: #999; font-size: 11px; float: right; margin-top: 4px; }
+    .sub-info { color: #555; margin-top: 6px; }
+
+    /* Semáforo */
+    .status-badge {
+      display: inline-block; padding: 5px 16px; border-radius: 20px;
+      font-size: 14px; font-weight: 700; letter-spacing: 0.5px;
+      background: #fff8e1; color: #e65100; border: 1px solid #ff9800;
+      margin: 8px 0;
+    }
+    .status-reason { font-size: 12px; color: #555; margin: 2px 0 10px; }
+
+    /* Metadata */
+    .meta-table { border-collapse: collapse; margin: 12px 0; width: auto; }
+    .meta-table th, .meta-table td { border: 1px solid #ddd; padding: 4px 10px;
+                                       text-align: left; font-size: 12px; }
+    .meta-table th { background: #f5f5f5; width: 140px; font-weight: 600; }
+
+    /* Tarjetas */
+    .cards { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0; }
+    .card { flex: 1; min-width: 110px; border: 1px solid #ddd; border-radius: 8px;
+              padding: 14px 12px; text-align: center; background: #fafafa; }
+    .card-label { font-size: 11px; color: #777; text-transform: uppercase;
+                    letter-spacing: 0.3px; margin-bottom: 6px; }
+    .card-value { font-size: 20px; font-weight: 700; color: #222; }
+    .card-ok    { background: #f1f8f1; border-color: #81c784; }
+    .card-ok .card-value { color: #2e7d32; }
+    .card-warn  { background: #fff8e1; border-color: #ffb74d; }
+    .card-warn .card-value { color: #e65100; }
+    .card-danger { background: #fce4ec; border-color: #e57373; }
+    .card-danger .card-value { color: #b71c1c; }
+
+    /* Resumen rápido y Qué revisar */
+    .summary-list, .review-list { margin: 6px 0; padding-left: 22px; line-height: 1.7; }
+    .no-issues { color: #2e7d32; font-weight: 600; margin: 6px 0; }
+
+    /* Alertas */
+    .alert-box { border-radius: 6px; padding: 10px 14px; margin: 12px 0; }
+    .alert-warn { background: #fff8e1; border: 1px solid #ffb74d; }
+    .alert-info { background: #e8f4fd; border: 1px solid #90caf9; }
+    .alert-box ul { margin: 4px 0; padding-left: 20px; line-height: 1.7; }
+
+    /* Tablas de datos */
+    table { border-collapse: collapse; width: 100%; margin-bottom: 12px; }
+    th, td { border: 1px solid #ddd; padding: 5px 8px; text-align: right; }
+    th { background: #f5f5f5; text-align: center; font-weight: 600; font-size: 12px; }
+    td:first-child, td:nth-child(2), td:nth-child(3) { text-align: left; }
+    .totals-table { width: auto; }
+    .totals-table td { font-weight: 600; }
+    .row-danger { background: #fce4ec; }
+    .row-warn   { background: #fff8e1; }
+    .row-low    { background: #fff3cd; }
+  </style>
+</head>
+<body>
+
+  <!-- CABECERA -->
+  <div class="header-block">
+    <span class="stamp">USO INTERNO — Index Clima</span>
+    <h1>Informe Interno — PRE-2026-0001</h1>
+    <div class="status-badge">REVISAR</div>
+    <p class="status-reason">Hay líneas con coste 0 que deben revisarse.</p>
+    <p class="sub-info">
+      <b>Cliente:</b> Comunidad de Propietarios Las Mimosas
+      &nbsp;|&nbsp; <b>Fecha:</b> 2026-06-28
+      &nbsp;|&nbsp; <b>Título:</b> Instalación split 1x1 vivienda
+    </p>
+    <table class="meta-table"><tr><th>ID guardado</th><td>PRE-2026-0001</td></tr><tr><th>Estado</th><td>draft</td></tr><tr><th>Creado</th><td>2026-06-28T18:33:45</td></tr><tr><th>Actualizado</th><td>2026-06-28T18:33:45</td></tr><tr><th>Autor</th><td>EON</td></tr><tr><th>Número presupuesto</th><td>PRE-2026-0001</td></tr></table>
+  </div>
+
+  <!-- TARJETAS -->
+  <h2>Estado del presupuesto</h2>
+  
+<div class="cards">
+  <div class="card">
+    <div class="card-label">Total cliente</div>
+    <div class="card-value">720.36 €</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Coste total</div>
+    <div class="card-value">313.50 €</div>
+  </div>
+  <div class="card card-ok">
+    <div class="card-label">Beneficio</div>
+    <div class="card-value">359.73 €</div>
+  </div>
+  <div class="card card-ok">
+    <div class="card-label">% Beneficio</div>
+    <div class="card-value">114.8%</div>
+  </div>
+  <div class="card card-danger">
+    <div class="card-label">Problemas</div>
+    <div class="card-value">1</div>
+  </div>
+  <div class="card card-warn">
+    <div class="card-label">Warnings</div>
+    <div class="card-value">2</div>
+  </div>
+</div>
+
+  <!-- RESUMEN RÁPIDO -->
+  <h2>Resumen rápido</h2>
+  <ul class="summary-list"><li>El total cliente es 720.36 €.</li><li>El beneficio es 359.73 € (114.8%).</li><li>El proveedor principal es Frigicoll.</li><li>El presupuesto tiene 2 líneas.</li><li>Hay 1 línea con coste 0 que debe revisarse.</li></ul>
+
+  <!-- QUÉ REVISAR -->
+  <h2>Qué revisar</h2>
+  <ul class="review-list"><li>Revisar líneas con coste 0 antes de enviar.</li><li>Revisar los warnings del motor de cálculo.</li></ul>
+
+  <div class="alert-box alert-warn"><h3>⚠ Problemas detectados</h3><ul><li><b>Instalación completa split 1x1</b> — coste 0</li></ul></div>
+  <div class="alert-box alert-warn"><h3>Warnings del motor</h3><ul><li>Línea 'Instalación completa split 1x1': sin precio de coste; se asume 0.</li><li>Línea 'Instalación completa split 1x1': coste 0, no se puede calcular % beneficio.</li></ul></div>
+
+  <!-- TOTALES DETALLADOS -->
+  <h2>Totales detallados</h2>
+  <table class="totals-table" style="width:auto">
+    <tr><td>Coste total</td><td>313.50 €</td></tr>
+    <tr><td>Tarifa bruta proveedor</td><td>550.00 €</td></tr>
+    <tr><td>Ahorro proveedor</td><td>236.50 €</td></tr>
+    <tr><td>Venta sin IGIC</td><td>673.23 €</td></tr>
+    <tr><td>IGIC</td><td>47.13 €</td></tr>
+    <tr><td><b>Total cliente</b></td><td><b>720.36 €</b></td></tr>
+    <tr><td>Beneficio bruto</td><td>359.73 €</td></tr>
+    <tr><td>% Beneficio</td><td>114.8%</td></tr>
+  </table>
+
+  <!-- RESUMEN POR PROVEEDOR -->
+  <h2>Resumen por proveedor</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Proveedor</th><th>Coste total</th><th>Venta total</th>
+        <th>Beneficio</th><th>% Benef.</th><th>Líneas</th>
+      </tr>
+    </thead>
+    <tbody><tr><td>Frigicoll</td><td>313.50 €</td><td>423.23 €</td><td>109.73 €</td><td>25.9%</td><td>1</td></tr>
+<tr><td>(sin proveedor)</td><td>0.00 €</td><td>250.00 €</td><td>250.00 €</td><td>100.0%</td><td>1</td></tr>
+</tbody>
+  </table>
+
+  <!-- LÍNEAS -->
+  <h2>Líneas del presupuesto</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Descripción</th><th>Tipo</th><th>Proveedor</th><th>Cantidad</th>
+        <th>Coste ud.</th><th>Coste total</th>
+        <th>Venta ud.</th><th>Venta total</th>
+        <th>IGIC%</th><th>Total cliente</th>
+        <th>Beneficio</th><th>% Benef.</th>
+      </tr>
+    </thead>
+    <tbody><tr><td>Unidad interior + exterior Daikin FTXC25C</td><td>material</td><td>Frigicoll</td><td>1.0 ud</td><td>313.50 €</td><td>313.50 €</td><td>423.23 €</td><td>423.23 €</td><td>7.0%</td><td>452.86 €</td><td>109.73 €</td><td>35.0%</td></tr>
+<tr class="row-warn"><td>Instalación completa split 1x1 ⚠</td><td>labor</td><td></td><td>1.0 ud</td><td>0.00 €</td><td>0.00 €</td><td>250.00 €</td><td>250.00 €</td><td>7.0%</td><td>267.50 €</td><td>250.00 €</td><td>N/A</td></tr>
+</tbody>
+  </table>
+
+  <div class="alert-box alert-info"><h3>Notas internas</h3><p>Cliente captado por referido. Instalación en piso bajo.</p></div>
+</body>
+</html>

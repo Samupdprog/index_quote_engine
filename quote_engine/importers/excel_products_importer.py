@@ -258,6 +258,23 @@ def _match_col(header: str, keywords: set[str]) -> bool:
     return any(kw in h for kw in keywords)
 
 
+def _match_supplier_col(header: str) -> bool:
+    """True si la columna es realmente un proveedor (no un compuesto tipo Codigo_Proveedor).
+
+    Usa tokens para evitar falsos positivos:
+      "Proveedor"             → tokens[0]="proveedor" ✓
+      "Codigo_Proveedor"      → tokens[0]="codigo"    ✗
+      "Descripcion_Proveedor" → tokens[0]="descripcion" ✗
+      "supplier_name"         → tokens[0]="supplier"  ✓
+    """
+    import re as _re
+    h = normalize_text(str(header))
+    if h in _SUPPLIER_KEYS:
+        return True
+    tokens = _re.split(r"[\s_\-]+", h)
+    return bool(tokens) and tokens[0] in _SUPPLIER_KEYS
+
+
 def _detect_columns(headers: list[Any]) -> dict[str, int]:
     """Detecta índices de columnas por tipo."""
     result: dict[str, list[int]] = {
@@ -286,7 +303,9 @@ def _detect_columns(headers: list[Any]) -> dict[str, int]:
             result["date"].append(i)
         if _match_col(h_str, _DOC_KEYS):
             result["document"].append(i)
-        if _match_col(h_str, _SUPPLIER_KEYS):
+        # Usar matching por token para evitar que "Codigo_Proveedor" o
+        # "Descripcion_Proveedor" sean detectados como columna de proveedor
+        if _match_supplier_col(h_str):
             result["supplier"].append(i)
 
     # Tomar el primero de cada tipo
@@ -618,11 +637,19 @@ class ExcelProductsImporter:
         if supplier_name is None:
             supplier_name = sheet_name
 
+        # Indice maximo de columna que se va a acceder
+        _max_col_needed = max((v for v in cols.values() if v != -1), default=-1)
+
         # Procesar filas de datos
         for row_idx, row in enumerate(rows[header_row_idx + 1:], start=header_row_idx + 2):
             report.total_rows += 1
 
-            # Descripción
+            # Saltar filas vacias o demasiado cortas para contener datos
+            if not row or (_max_col_needed >= 0 and len(row) <= _max_col_needed):
+                report.ignored_rows.append({"row": row_idx, "reason": "Fila vacia o incompleta"})
+                continue
+
+            # Descripcion
             desc = _safe_str(row[cols["description"]]) if cols["description"] != -1 else None
             if not desc:
                 report.ignored_rows.append({"row": row_idx, "reason": "Sin descripción"})
